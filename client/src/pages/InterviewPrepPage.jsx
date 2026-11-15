@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import MainLayout from '../components/MainLayout';
 import { 
@@ -32,16 +32,20 @@ import {
 } from '../components/common';
 import interviewService from '../services/interviewService';
 import { normalizeApiError } from '../utils/apiError';
+import { validateVivaAnswer } from '../utils/clientValidation';
 
 export default function InterviewPrepPage() {
   const [difficulty, setDifficulty] = useState('INTERMEDIATE');
   const [session, setSession] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [studentAnswer, setStudentAnswer] = useState('');
+  const [answerError, setAnswerError] = useState(null);
+  const [draftAnswers, setDraftAnswers] = useState({});
   const [loading, setLoading] = useState(false);
   const [evaluating, setEvaluating] = useState(false);
   const [error, setError] = useState(null);
   const [evaluationResult, setEvaluationResult] = useState(null);
+  const isSubmittingRef = React.useRef(false);
 
   // Auto-start a default practice session on mount if none exists
   useEffect(() => {
@@ -95,23 +99,36 @@ export default function InterviewPrepPage() {
   };
 
   const handleSelectQuestion = (index) => {
+    // Preserve current answer in draft
+    setDraftAnswers(prev => ({ ...prev, [currentQuestionIndex]: studentAnswer }));
+    
     setCurrentQuestionIndex(index);
     const q = session?.questions?.[index];
-    setStudentAnswer(q?.studentAnswer || '');
+    // Restore drafted answer if present, else session stored answer
+    const restoredAnswer = draftAnswers[index] !== undefined 
+      ? draftAnswers[index] 
+      : (q?.studentAnswer || '');
+    setStudentAnswer(restoredAnswer);
     setEvaluationResult(q?.evaluation || null);
+    setAnswerError(null);
     setError(null);
   };
 
   const handleSubmitAnswer = async (e) => {
     e?.preventDefault();
     if (!session?._id) return;
+    if (isSubmittingRef.current || evaluating) return;
 
-    if (!studentAnswer || studentAnswer.trim().length < 10) {
-      setError('Please provide a substantive technical answer (at least 10 characters).');
+    // Validate viva answer
+    const valErr = validateVivaAnswer(studentAnswer);
+    if (valErr) {
+      setAnswerError(valErr);
       return;
     }
 
+    setAnswerError(null);
     setEvaluating(true);
+    isSubmittingRef.current = true;
     setError(null);
 
     try {
@@ -124,7 +141,8 @@ export default function InterviewPrepPage() {
       const evalData = response.data.evaluation;
       setEvaluationResult(evalData);
 
-      // Update in-memory session question state
+      // Update in-memory session question state and clear draft
+      setDraftAnswers(prev => ({ ...prev, [currentQuestionIndex]: studentAnswer.trim() }));
       setSession(prev => {
         if (!prev) return prev;
         const updatedQuestions = [...prev.questions];
@@ -144,6 +162,7 @@ export default function InterviewPrepPage() {
       setError(normalizeApiError(err));
     } finally {
       setEvaluating(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -304,20 +323,36 @@ export default function InterviewPrepPage() {
                 <form onSubmit={handleSubmitAnswer} className="space-y-4">
                   <div>
                     <label htmlFor="student-answer" className="block text-xs font-bold text-navy-900 uppercase tracking-wider mb-1.5">
-                      Your Technical Answer
+                      Your Technical Answer <span className="text-coral-500">*</span>
                     </label>
                     <textarea
                       id="student-answer"
                       rows={6}
                       value={studentAnswer}
-                      onChange={(e) => setStudentAnswer(e.target.value)}
+                      onChange={(e) => {
+                        setStudentAnswer(e.target.value);
+                        if (answerError) setAnswerError(null);
+                      }}
                       placeholder="Explain your architectural reasoning, code implementation details, and trade-offs..."
-                      className="w-full p-3.5 rounded-xl border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-navy-900/10 focus:border-navy-900 transition-all font-sans resize-y bg-slate-50/50"
+                      aria-invalid={!!answerError}
+                      aria-describedby={answerError ? 'student-answer-error' : 'student-answer-helper'}
+                      className={`w-full p-3.5 rounded-xl border text-xs text-slate-800 focus:outline-none focus:ring-2 transition-all font-sans resize-y ${
+                        answerError
+                          ? 'border-coral-500 bg-coral-50/20 focus:ring-coral-500/20 focus:border-coral-600'
+                          : 'border-slate-200 bg-slate-50/50 focus:ring-navy-900/10 focus:border-navy-900'
+                      }`}
                     />
                     <div className="flex justify-between items-center text-[11px] text-slate-400 mt-1">
-                      <span>{studentAnswer.length} characters (min. 10)</span>
-                      <span>Rubric evaluates Accuracy, Evidence, and Clarity</span>
+                      <span id="student-answer-helper" className={studentAnswer.length > 4000 ? 'text-coral-600 font-bold' : ''}>
+                        {studentAnswer.length.toLocaleString()} / 4,000 characters (min. 15 required)
+                      </span>
+                      <span>Rubric evaluates Accuracy (40%), Evidence (35%), Clarity (25%)</span>
                     </div>
+                    {answerError && (
+                      <p id="student-answer-error" className="text-xs text-coral-600 mt-1.5 font-medium">
+                        {answerError}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between pt-2">
@@ -346,7 +381,7 @@ export default function InterviewPrepPage() {
                     <Button
                       type="submit"
                       variant="primary"
-                      disabled={evaluating || studentAnswer.trim().length < 10}
+                      disabled={evaluating || studentAnswer.trim().length < 15}
                       className="px-6"
                     >
                       {evaluating ? (

@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PageLayout from '../components/PageLayout';
 import { ShieldCheck, Lock, Mail, User, Github, GraduationCap, Calendar, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Button, Input, ErrorMessage } from '../components/common';
 import { authService } from '../services/authService';
+import { 
+  validateFullName, 
+  validateEmail, 
+  validatePassword, 
+  validateGitHubHandle, 
+  sanitizeInput 
+} from '../utils/clientValidation';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -12,16 +19,23 @@ export default function RegisterPage() {
     githubHandle: '',
     collegeName: 'National Institute of Engineering',
     graduationYr: '2026',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
+  const [fieldErrors, setFieldErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [validationErrors, setValidationErrors] = useState([]);
   const [successNotice, setSuccessNotice] = useState('');
+  const isSubmittingRef = useRef(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({ ...prev, [name]: null }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -29,11 +43,53 @@ export default function RegisterPage() {
     setErrorMessage('');
     setValidationErrors([]);
     setSuccessNotice('');
+
+    // Guard against accidental double submit
+    if (isSubmittingRef.current || isLoading) return;
+
+    // Synchronous client validation
+    const errors = {};
+    const nameErr = validateFullName(formData.fullName);
+    if (nameErr) errors.fullName = nameErr;
+
+    const emailErr = validateEmail(formData.email);
+    if (emailErr) errors.email = emailErr;
+
+    const passErr = validatePassword(formData.password, 8);
+    if (passErr) errors.password = passErr;
+
+    if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match.';
+    }
+
+    if (formData.githubHandle) {
+      const gitErr = validateGitHubHandle(formData.githubHandle);
+      if (gitErr) errors.githubHandle = gitErr;
+    }
+
+    if (formData.graduationYr) {
+      const yr = parseInt(formData.graduationYr, 10);
+      if (isNaN(yr) || yr < 2020 || yr > 2035) {
+        errors.graduationYr = 'Graduation year must be between 2020 and 2035.';
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return;
+    }
+
+    setFieldErrors({});
     setIsLoading(true);
+    isSubmittingRef.current = true;
 
     try {
       const payload = {
-        ...formData,
+        fullName: sanitizeInput(formData.fullName.trim()),
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+        githubHandle: formData.githubHandle ? sanitizeInput(formData.githubHandle.trim().replace(/^@/, '')) : null,
+        collegeName: formData.collegeName ? sanitizeInput(formData.collegeName.trim()) : null,
         graduationYr: formData.graduationYr ? parseInt(formData.graduationYr, 10) : 2026
       };
 
@@ -49,6 +105,7 @@ export default function RegisterPage() {
       }
     } finally {
       setIsLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -95,71 +152,105 @@ export default function RegisterPage() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <Input
+              id="register-fullName"
               label="Full Name"
               type="text"
               name="fullName"
               value={formData.fullName}
               onChange={handleChange}
               placeholder="Alex Morgan"
-              leftIcon={<User className="w-4 h-4 text-slate-400" />}
+              icon={User}
+              error={fieldErrors.fullName}
+              disabled={isLoading}
               required
             />
 
             <Input
+              id="register-email"
               label="College Email"
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               placeholder="alex.morgan@university.edu"
-              leftIcon={<Mail className="w-4 h-4 text-slate-400" />}
+              icon={Mail}
+              error={fieldErrors.email}
+              disabled={isLoading}
               required
             />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
+                id="register-githubHandle"
                 label="GitHub Username"
                 type="text"
                 name="githubHandle"
                 value={formData.githubHandle}
                 onChange={handleChange}
                 placeholder="alexmorgan-dev"
-                leftIcon={<Github className="w-4 h-4 text-slate-400" />}
+                icon={Github}
+                error={fieldErrors.githubHandle}
+                disabled={isLoading}
               />
 
               <Input
+                id="register-graduationYr"
                 label="Graduation Year"
                 type="number"
                 name="graduationYr"
                 value={formData.graduationYr}
                 onChange={handleChange}
                 placeholder="2026"
-                leftIcon={<Calendar className="w-4 h-4 text-slate-400" />}
+                icon={Calendar}
+                error={fieldErrors.graduationYr}
+                disabled={isLoading}
               />
             </div>
 
             <Input
+              id="register-collegeName"
               label="College / Institution"
               type="text"
               name="collegeName"
               value={formData.collegeName}
               onChange={handleChange}
               placeholder="National Institute of Technology"
-              leftIcon={<GraduationCap className="w-4 h-4 text-slate-400" />}
+              icon={GraduationCap}
+              error={fieldErrors.collegeName}
+              disabled={isLoading}
             />
 
-            <Input
-              label="Password (min. 8 characters)"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              leftIcon={<Lock className="w-4 h-4 text-slate-400" />}
-              required
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                id="register-password"
+                label="Password (min. 8 chars)"
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                icon={Lock}
+                error={fieldErrors.password}
+                disabled={isLoading}
+                required
+              />
+
+              <Input
+                id="register-confirmPassword"
+                label="Confirm Password"
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="••••••••"
+                icon={Lock}
+                error={fieldErrors.confirmPassword}
+                disabled={isLoading}
+                required
+              />
+            </div>
 
             <Button
               type="submit"

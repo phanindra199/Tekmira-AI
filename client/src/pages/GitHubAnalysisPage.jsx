@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import PageLayout from '../components/PageLayout';
 import { 
   Github, 
@@ -28,14 +28,17 @@ import Badge from '../components/common/Badge';
 import ErrorMessage from '../components/common/ErrorMessage';
 import LoadingIndicator from '../components/common/LoadingIndicator';
 import { normalizeApiError } from '../utils/apiError';
+import { validateGitHubUrl, validateEmail } from '../utils/clientValidation';
 
 export default function GitHubAnalysisPage() {
   const navigate = useNavigate();
   const [repoUrl, setRepoUrl] = useState('');
   const [candidateEmail, setCandidateEmail] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [snapshot, setSnapshot] = useState(null);
+  const isSubmittingRef = React.useRef(false);
 
   // Sample quick-select repositories
   const sampleRepos = [
@@ -46,12 +49,25 @@ export default function GitHubAnalysisPage() {
 
   const handleInspect = async (e) => {
     e?.preventDefault();
-    if (!repoUrl.trim()) {
-      setError('Please provide a valid public GitHub repository URL.');
+    if (isSubmittingRef.current || loading) return;
+
+    const errors = {};
+    const urlErr = validateGitHubUrl(repoUrl);
+    if (urlErr) errors.repoUrl = urlErr;
+
+    if (candidateEmail && candidateEmail.trim()) {
+      const emailErr = validateEmail(candidateEmail);
+      if (emailErr) errors.candidateEmail = emailErr;
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
 
+    setFieldErrors({});
     setLoading(true);
+    isSubmittingRef.current = true;
     setError(null);
     setSnapshot(null);
 
@@ -62,11 +78,13 @@ export default function GitHubAnalysisPage() {
       setError(normalizeApiError(err));
     } finally {
       setLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
   const handleSelectSample = (url) => {
     setRepoUrl(url);
+    setFieldErrors(prev => ({ ...prev, repoUrl: null }));
     setError(null);
   };
 
@@ -105,11 +123,25 @@ export default function GitHubAnalysisPage() {
                   id="repo-url"
                   type="text"
                   value={repoUrl}
-                  onChange={(e) => setRepoUrl(e.target.value)}
+                  onChange={(e) => {
+                    setRepoUrl(e.target.value);
+                    if (fieldErrors.repoUrl) setFieldErrors(prev => ({ ...prev, repoUrl: null }));
+                  }}
                   placeholder="https://github.com/owner/repository"
-                  className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-navy-900/10 focus:border-navy-900 transition-all bg-slate-50/50"
+                  aria-invalid={!!fieldErrors.repoUrl}
+                  aria-describedby={fieldErrors.repoUrl ? 'repo-url-error' : undefined}
+                  className={`w-full pl-11 pr-4 py-2.5 rounded-xl border text-xs font-mono transition-all ${
+                    fieldErrors.repoUrl 
+                      ? 'border-coral-500 bg-coral-50/20 text-coral-900 focus:ring-coral-500/20 focus:border-coral-600' 
+                      : 'border-slate-200 text-slate-800 bg-slate-50/50 focus:ring-navy-900/10 focus:border-navy-900'
+                  }`}
                 />
               </div>
+              {fieldErrors.repoUrl && (
+                <p id="repo-url-error" className="text-xs text-coral-600 mt-1.5 font-medium">
+                  {fieldErrors.repoUrl}
+                </p>
+              )}
             </div>
 
             <div className="md:col-span-4">
@@ -120,10 +152,24 @@ export default function GitHubAnalysisPage() {
                 id="author-email"
                 type="email"
                 value={candidateEmail}
-                onChange={(e) => setCandidateEmail(e.target.value)}
+                onChange={(e) => {
+                  setCandidateEmail(e.target.value);
+                  if (fieldErrors.candidateEmail) setFieldErrors(prev => ({ ...prev, candidateEmail: null }));
+                }}
                 placeholder="developer@example.com"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-navy-900/10 focus:border-navy-900 transition-all bg-slate-50/50"
+                aria-invalid={!!fieldErrors.candidateEmail}
+                aria-describedby={fieldErrors.candidateEmail ? 'author-email-error' : undefined}
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-xs transition-all ${
+                  fieldErrors.candidateEmail
+                    ? 'border-coral-500 bg-coral-50/20 text-coral-900 focus:ring-coral-500/20 focus:border-coral-600'
+                    : 'border-slate-200 text-slate-800 bg-slate-50/50 focus:ring-navy-900/10 focus:border-navy-900'
+                }`}
               />
+              {fieldErrors.candidateEmail && (
+                <p id="author-email-error" className="text-xs text-coral-600 mt-1.5 font-medium">
+                  {fieldErrors.candidateEmail}
+                </p>
+              )}
             </div>
           </div>
 

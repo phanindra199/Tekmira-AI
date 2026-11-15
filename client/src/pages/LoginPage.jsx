@@ -1,34 +1,72 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PageLayout from '../components/PageLayout';
-import { ShieldCheck, Lock, Mail, ArrowRight, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Button, Input, ErrorMessage } from '../components/common';
 import { authService } from '../services/authService';
+import { validateEmail, validatePassword } from '../utils/clientValidation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successNotice, setSuccessNotice] = useState('');
+  const isSubmittingRef = useRef(false);
   const navigate = useNavigate();
+
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value);
+    if (fieldErrors.email) {
+      setFieldErrors(prev => ({ ...prev, email: null }));
+    }
+  };
+
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+    if (fieldErrors.password) {
+      setFieldErrors(prev => ({ ...prev, password: null }));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
     setSuccessNotice('');
+
+    // Guard against accidental double submit
+    if (isSubmittingRef.current || isLoading) return;
+
+    // Client-side synchronous validation
+    const emailErr = validateEmail(email);
+    const passErr = validatePassword(password, 1); // min 1 for login
+    if (emailErr || passErr) {
+      setFieldErrors({
+        email: emailErr,
+        password: passErr
+      });
+      return;
+    }
+
+    setFieldErrors({});
     setIsLoading(true);
+    isSubmittingRef.current = true;
 
     try {
-      await authService.login({ email, password });
+      await authService.login({
+        email: email.trim().toLowerCase(),
+        password
+      });
       setSuccessNotice('Authentication successful! Redirecting to placement dashboard...');
       setTimeout(() => {
         navigate('/dashboard');
       }, 700);
     } catch (err) {
-      setErrorMessage(err.message || 'Authentication failed. Please verify your email and password.');
+      setErrorMessage(err.message || 'Authentication failed. Please verify your credentials.');
     } finally {
       setIsLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -68,24 +106,32 @@ export default function LoginPage() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <Input
+              id="login-email"
+              name="email"
               label="College or Personal Email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
               placeholder="candidate@university.edu"
-              leftIcon={<Mail className="w-4 h-4 text-slate-400" />}
+              icon={Mail}
+              error={fieldErrors.email}
+              disabled={isLoading}
               required
             />
 
             <Input
+              id="login-password"
+              name="password"
               label="Account Password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
               placeholder="••••••••"
-              leftIcon={<Lock className="w-4 h-4 text-slate-400" />}
+              icon={Lock}
+              error={fieldErrors.password}
+              disabled={isLoading}
               required
             />
 

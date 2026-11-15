@@ -16,7 +16,9 @@ import { validate } from '../middleware/validate.js';
 import {
   createResumeSchema,
   saveRepositorySchema,
-  createReportSchema
+  createReportSchema,
+  fetchRepositoryEvidenceSchema,
+  triangulateSkillsSchema
 } from '../validations/analysisValidation.js';
 import {
   handleResumeUpload,
@@ -47,12 +49,12 @@ router.post('/resumes', validate(createResumeSchema), createResumeRecord);
 router.get('/resumes/:id', getResumeRecord);
 
 // --- GitHub Repository Mining & Snapshots ---
-router.post('/repositories/fetch', optionalAuth, fetchRepositoryEvidenceHandler);
+router.post('/repositories/fetch', optionalAuth, validate(fetchRepositoryEvidenceSchema), fetchRepositoryEvidenceHandler);
 router.post('/repositories', validate(saveRepositorySchema), saveRepositorySnapshot);
 router.get('/repositories/user/:userId', getUserRepositories);
 
 // --- 3-Way Skill Evidence Triangulation & Reports ---
-router.post('/triangulate', optionalAuth, triangulateSkillsHandler);
+router.post('/triangulate', optionalAuth, validate(triangulateSkillsSchema), triangulateSkillsHandler);
 router.post('/reports', validate(createReportSchema), createAnalysisReport);
 router.get('/reports/user/:userId', getUserReportsHandler);
 router.get('/reports/:id', getAnalysisReport);

@@ -205,8 +205,19 @@ export default function ResumeAnalysisPage() {
 
   // Analyze text with Gemini (Structured Output)
   const handleAnalyze = async (mode = 'structured') => {
-    if (!resumeText.trim()) {
+    const trimmed = resumeText.trim();
+    if (!trimmed) {
       setError('Please provide candidate resume text or upload a valid PDF document.');
+      return;
+    }
+
+    if (trimmed.length < 20) {
+      setError(`Resume text is too short (${trimmed.length} characters). Please provide at least 20 characters of technical background.`);
+      return;
+    }
+
+    if (trimmed.length > 50000) {
+      setError(`Resume text exceeds maximum limit of 50,000 characters (${trimmed.length.toLocaleString()} characters). Please trim your input.`);
       return;
     }
 
@@ -218,9 +229,9 @@ export default function ResumeAnalysisPage() {
     try {
       let result;
       if (mode === 'structured') {
-        result = await aiService.extractStructuredSkills(resumeText.trim());
+        result = await aiService.extractStructuredSkills(trimmed);
       } else {
-        result = await aiService.analyzeResume(resumeText.trim());
+        result = await aiService.analyzeResume(trimmed);
       }
       setAnalysisResult(result);
     } catch (err) {
@@ -505,7 +516,9 @@ export default function ResumeAnalysisPage() {
 
                 <div className="flex items-center justify-between text-xs text-slate-400 pt-2 mb-4">
                   <span>{resumeText.trim().split(/\s+/).filter(Boolean).length} words</span>
-                  <span>{resumeText.length} characters</span>
+                  <span className={resumeText.length > 50000 ? 'text-coral-600 font-bold' : ''}>
+                    {resumeText.length.toLocaleString()} / 50,000 characters (min. 20)
+                  </span>
                 </div>
 
                 {/* Analysis Action Buttons */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PageLayout from '../components/PageLayout';
 import { 
   Target, 
@@ -12,17 +12,22 @@ import {
   MapPin,
   Clock
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button, Badge, LoadingIndicator, ErrorMessage } from '../components/common';
 import { jobService } from '../services/jobService';
+import { validateCustomJobDescription } from '../utils/clientValidation';
 
 export default function JobMatchPage() {
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [customJD, setCustomJD] = useState('');
+  const [customJdError, setCustomJdError] = useState(null);
+  const [selectionError, setSelectionError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [savedStatus, setSavedStatus] = useState({});
+  const isNavigatingRef = React.useRef(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -62,6 +67,42 @@ export default function JobMatchPage() {
   };
 
   const selectedJob = jobs.find(j => j.id === selectedJobId) || jobs[0];
+
+  const handleCustomJdChange = (e) => {
+    const val = e.target.value;
+    setCustomJD(val);
+    if (customJdError) {
+      setCustomJdError(null);
+    }
+    if (selectionError) {
+      setSelectionError(null);
+    }
+  };
+
+  const handleExecuteTriangulation = (e) => {
+    e.preventDefault();
+    if (isNavigatingRef.current) return;
+
+    // If custom JD provided, validate it
+    if (customJD.trim().length > 0) {
+      const jdErr = validateCustomJobDescription(customJD);
+      if (jdErr) {
+        setCustomJdError(jdErr);
+        return;
+      }
+      sessionStorage.setItem('tekmira_custom_jd', customJD.trim());
+    } else if (!selectedJob) {
+      setSelectionError('Please select a campus benchmark job profile or paste a job description.');
+      return;
+    } else {
+      sessionStorage.setItem('tekmira_selected_job_id', selectedJob.id);
+    }
+
+    setSelectionError(null);
+    setCustomJdError(null);
+    isNavigatingRef.current = true;
+    navigate('/analysis-report');
+  };
 
   return (
     <PageLayout
@@ -239,13 +280,39 @@ export default function JobMatchPage() {
           </div>
         </div>
 
-        <textarea
-          rows={6}
-          value={customJD}
-          onChange={(e) => setCustomJD(e.target.value)}
-          placeholder="Paste job title, responsibilities, and required qualifications here..."
-          className="w-full p-4 rounded-xl border border-slate-200 text-xs font-mono text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-navy-900/10 focus:border-navy-900 transition-all resize-y"
-        />
+        {selectionError && (
+          <div className="mb-4 p-3 rounded-xl bg-coral-50 border border-coral-200 text-coral-700 text-xs">
+            {selectionError}
+          </div>
+        )}
+
+        <div className="relative">
+          <textarea
+            id="custom-jd-textarea"
+            rows={6}
+            value={customJD}
+            onChange={handleCustomJdChange}
+            placeholder="Paste job title, responsibilities, and required qualifications here..."
+            aria-invalid={!!customJdError}
+            aria-describedby={customJdError ? 'custom-jd-error' : 'custom-jd-helper'}
+            className={`w-full p-4 rounded-xl border text-xs font-mono text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all resize-y ${
+              customJdError
+                ? 'border-coral-500 bg-coral-50/20 focus:ring-coral-500/20 focus:border-coral-600'
+                : 'border-slate-200 focus:ring-navy-900/10 focus:border-navy-900'
+            }`}
+          />
+          <div className="flex justify-between items-center mt-1 px-1 text-[11px] text-slate-400">
+            <span id="custom-jd-helper">Minimum 20 characters required if providing custom JD</span>
+            <span className={customJD.length > 20000 ? 'text-coral-600 font-bold' : ''}>
+              {customJD.length.toLocaleString()} / 20,000 chars
+            </span>
+          </div>
+          {customJdError && (
+            <p id="custom-jd-error" className="text-xs text-coral-600 mt-1.5 font-medium">
+              {customJdError}
+            </p>
+          )}
+        </div>
 
         <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-slate-500 flex items-center gap-1.5">
@@ -253,12 +320,14 @@ export default function JobMatchPage() {
             <span>Gemini NLP will extract mandatory requirements and skill weights automatically.</span>
           </p>
 
-          <Link to="/analysis-report">
-            <Button variant="coral">
-              <span>Execute 3-Way Triangulation</span>
-              <ArrowRight className="w-4 h-4 ml-1.5" />
-            </Button>
-          </Link>
+          <Button 
+            type="button" 
+            variant="coral" 
+            onClick={handleExecuteTriangulation}
+          >
+            <span>Execute 3-Way Triangulation</span>
+            <ArrowRight className="w-4 h-4 ml-1.5" />
+          </Button>
         </div>
       </div>
     </PageLayout>

@@ -407,3 +407,30 @@ Client Receives Standardized { success, message, data }
 | **Why use `bcrypt` salts and work factors?** | Cryptographic Security | The salt ensures identical passwords produce distinct hashes, neutralizing precomputed Rainbow Table attacks. The configurable work factor (10 rounds) makes brute-force cracking computationally prohibitive. |
 | **Why should RESTful endpoints use nouns instead of verbs?** | REST Constraints | In REST, URIs represent resources (nouns like `/jobs`), while HTTP verbs (`GET`, `POST`, `PUT`, `DELETE`) communicate the operation. Using verbs in URIs violates the Uniform Interface constraint. |
 | **Why validate request payloads at runtime with Zod?** | Defensive API Design | TypeScript or JavaScript type assertions only exist at compile time; runtime attacks, malformed JSON, and unexpected nulls occur in production. Zod validates boundaries before inputs reach database queries. |
+
+---
+
+## 14. Week 2 (Days 8–14) Core Engine & AI Gateway
+- **Day 8 (Gemini 2.5 Flash API Gateway):** Official `@google/genai` SDK architecture, fail-safe fallback mock, system prompt isolation.
+- **Day 9 (Prompt Engineering & Zero-Hallucination):** Native OpenAPI decoding sampler schemas (`responseSchema`) and Zod runtime invariants.
+- **Day 10 (PDF Resume Ingestion & Parsing):** Multer in-memory buffers, `%PDF-` magic byte inspection, SHA-256 deduplication, scanned document detection.
+- **Day 11 (GitHub REST API Evidence Mining):** Recursive tree traversal (`GET /git/trees/...`), language distribution calculation, AST dependency extraction (`package.json`, `pom.xml`, `requirements.txt`), commit author verification.
+- **Day 12 (3-Way Triangulation & Placement Readiness Index):** Empirical matrix classification (`VERIFIED`, `INFLATED_CLAIM`, `UNCLAIMED_STRENGTH`, `MISSING_CRITICAL`), mathematical PRI formula ($0$–$100$), remediation action planner.
+- **Day 13 (Analysis Dashboard Integration):** Real-time async state, radial SVG PRI meter, 4 metric cards, 3-way filterable skills breakdown, `AbortController` cleanup guards.
+- **Day 14 (AI Technical Viva Voce & Grounded Defense):** Codebase-grounded question generator citing real repo files, 3-part academic rubric (Accuracy 40%, Evidence 35%, Clarity 25%), cumulative score tracking, ethical AI disclaimer.
+- **Master Notes Documentation:** Complete 20+ page master reference compiled in [`docs/Tekmira_AI_Week_2_Master_Notes.html`](file:///c:/Users/phani/OneDrive/Desktop/Tekmira AI/docs/Tekmira_AI_Week_2_Master_Notes.html).
+
+---
+
+## 15. Day 15 — Controlled Forms & Client-Server Validation Boundary
+- **Controlled Inputs:** React state management across candidate registration, login, resume upload, GitHub mining URL, benchmark job selection, and viva answer submission.
+- **Client Validation Utilities (`clientValidation.js`):** Synchronous format and boundary checks (`validateEmail`, `validatePassword`, `validateFullName`, `validateGitHubUrl`, `validateCustomJobDescription`, `validateVivaAnswer`).
+- **Accessible Error States:** Inline `aria-invalid`, `aria-describedby`, error alert styling (`border-coral-500`), and live character counters with threshold warnings.
+- **Accidental Duplicate Submission Prevention:** Submission refs (`isSubmittingRef`) and disabled/loading button states preventing race conditions and double network dispatches.
+- **Server-Side Zod Boundaries:**
+  - `fetchRepositoryEvidenceSchema` added to `POST /api/analysis/repositories/fetch`.
+  - `triangulateSkillsSchema` added to `POST /api/analysis/triangulate`.
+  - `createInterviewSessionSchema` added to `POST /api/interview/sessions`.
+  - `evaluateAnswerSchema` added to `POST /api/interview/sessions/:id/evaluate`.
+- **Automated Verification:** 27 test cases in `server/src/test/testFormValidationEdgeCases.js` covering empty payloads, whitespace bypasses, invalid URLs, excessive lengths, and malformed inputs (**27 passed, 0 failed**).
+- **Master Test Suite:** **275 / 275 tests passing across all 11 suites**. Production client build verified passing (`vite build` in 4.45s, 0 errors).

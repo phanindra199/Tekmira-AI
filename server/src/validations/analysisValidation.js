@@ -51,4 +51,31 @@ export const createReportSchema = z.object({
   })).min(1, 'At least one skill must be evaluated')
 });
 
-export default { createResumeSchema, saveRepositorySchema, createReportSchema };
+export const fetchRepositoryEvidenceSchema = z.object({
+  repoUrl: z.string({ required_error: 'GitHub repository URL is required' })
+    .trim()
+    .min(1, 'Repository URL cannot be empty')
+    .url('Must be a valid URL')
+    .regex(
+      /^https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+\/?$/,
+      'Must be a valid public GitHub repository URL (e.g., https://github.com/owner/repository)'
+    ),
+  candidateEmail: z.string().trim().email('Invalid email address format').optional().or(z.literal(''))
+});
+
+export const triangulateSkillsSchema = z.object({
+  resumeId: z.string().trim().optional(),
+  resumeText: z.string().trim().optional(),
+  repoUrl: z.string().trim().url('Must be a valid repository URL').regex(/^https?:\/\//, 'Must be an HTTP/HTTPS URL').optional().or(z.literal('')),
+  repositoryId: z.string().trim().optional(),
+  jobId: z.string().trim().optional(),
+  targetRole: z.string().trim().max(100).optional()
+});
+
+export default { 
+  createResumeSchema, 
+  saveRepositorySchema, 
+  createReportSchema,
+  fetchRepositoryEvidenceSchema,
+  triangulateSkillsSchema
+};
