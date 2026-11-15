@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tekmira AI — Complete Master Architecture & Development Notes</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
+
+    :root {
+      --primary: #10223D;
+      --secondary: #203753;
+      --coral: #FF806F;
+      --light-bg: #F7F9FC;
+      --text: #172033;
+      --muted: #64748B;
+      --border: #E2E8F0;
+      --success: #059669;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      background-color: #FFFFFF;
+      line-height: 1.65;
+      padding: 40px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    /* Print Optimizations for PDF Export */
+    @media print {
+      body { padding: 0; max-width: 100%; font-size: 11pt; }
+      .no-print { display: none !important; }
+      .page-break { page-break-before: always; }
+      h1, h2, h3 { page-break-after: avoid; }
+      pre, table { page-break-inside: avoid; }
+    }
+
+    /* Header & Branding */
+    header {
+      border-bottom: 3px solid var(--primary);
+      padding-bottom: 24px;
+      margin-bottom: 36px;
+    }
+    .badge-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .badge {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      letter-spacing: 0.05em;
+    }
+    .badge-navy { background: #E0E7FF; color: var(--primary); }
+    .badge-coral { background: #FFE4E0; color: #D9483B; }
+    .badge-success { background: #D1FAE5; color: var(--success); }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    .tagline {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--coral);
+      margin-bottom: 8px;
+    }
+    .meta {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Print Button */
+    .print-btn-bar {
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .btn-print {
+      background: var(--primary);
+      color: white;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(16, 34, 61, 0.15);
+      transition: background 0.2s;
+    }
+    .btn-print:hover { background: var(--secondary); }
+
+    /* Headings */
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--primary);
+      border-left: 4px solid var(--coral);
+      padding-left: 12px;
+      margin: 36px 0 16px 0;
+    }
+    h3 {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--secondary);
+      margin: 22px 0 10px 0;
+    }
+
+    /* Paragraphs & Lists */
+    p { margin-bottom: 14px; }
+    ul, ol { margin-left: 24px; margin-bottom: 16px; }
+    li { margin-bottom: 6px; }
+
+    /* Code & Blocks */
+    code {
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      background: #F1F5F9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #0F172A;
+    }
+    pre {
+      background: #0F172A;
+      color: #E2E8F0;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      margin: 16px 0;
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 13px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      text-align: left;
+    }
+    th {
+      background: var(--light-bg);
+      font-weight: 600;
+      color: var(--primary);
+    }
+    tr:nth-child(even) { background: #FAFAFC; }
+
+    /* Callout Boxes */
+    .callout {
+      background: var(--light-bg);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--primary);
+      padding: 16px;
+      border-radius: 6px;
+      margin: 18px 0;
+    }
+    .callout-coral {
+      border-left-color: var(--coral);
+      background: #FFF9F8;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+      color: var(--primary);
+    }
+
+    /* Timeline Cards */
+    .day-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 24px;
+      background: #FFFFFF;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .day-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    .day-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .commit-tag {
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      background: #E2E8F0;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="print-btn-bar no-print">
+    <button class="btn-print" onclick="window.print()">🖨️ Export / Print as PDF</button>
+  </div>
+
+  <header>
+    <div class="badge-bar">
+      <span class="badge badge-navy">Tekmira AI Engineering</span>
+      <span class="badge badge-coral">21-Day Autonomous Roadmap</span>
+      <span class="badge badge-success">Day 1 to Day 4 Verified</span>
+    </div>
+    <h1>Tekmira AI — Complete Master Architecture & Notes</h1>
+    <div class="tagline">Beyond Claims. Driven by Evidence.</div>
+    <div class="meta">
+      <strong>Repository:</strong> https://github.com/phanindra199/Tekmira-AI.git &nbsp;|&nbsp; 
+      <strong>Branch:</strong> main &nbsp;|&nbsp; 
+      <strong>Generated:</strong> November 2026
+    </div>
+  </header>
+
+  <section>
+    <h2>1. Executive Summary & Problem Modeling</h2>
+    <p>
+      In technical campus placements, college graduates submit resumes claiming proficiencies in advanced frameworks, 
+      distributed databases, and high-concurrency architectures. However, recruiters encounter massive <strong>resume inflation</strong>:
+      candidates memorize buzzwords without writing real code, while keyword-matching ATS engines reward inflated claims over genuine coding capability.
+    </p>
+    <div class="callout callout-coral">
+      <div class="callout-title">The 3-Way Triangulation Engine</div>
+      <p>Tekmira AI eliminates resume inflation by cross-verifying three independent sources of truth:</p>
+      <ul>
+        <li><strong>Self-Reported Claims (Input):</strong> Extracted from the candidate's resume (PDF).</li>
+        <li><strong>Empirical Code Evidence (Proof):</strong> Mined from the candidate's public GitHub repositories (authentic commits, AST language distribution, lines of code, test coverage).</li>
+        <li><strong>Objective Benchmarks (Standard):</strong> Ingested from real campus job descriptions (JDs).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. Complete Chronological Journey: Day 1 through Day 4</h2>
+
+    <!-- DAY 1 -->
+    <div class="day-card">
+      <div class="day-header">
+        <span class="day-title">Day 1 — Foundation, Scaffolding & Architecture</span>
+        <span class="commit-tag">commit b3ff54d (Synced with Remote)</span>
+      </div>
+      <p><strong>Primary Goal:</strong> Establish clean React/Vite client, Express backend, documentation baseline, and GitHub sync.</p>
+      <ul>
+        <li><strong>Decoupled Architecture:</strong> Completely separated <code>client/</code> (React 18 + Vite 6 + Tailwind) and <code>server/</code> (Node.js v22 + Express 4 ESM).</li>
+        <li><strong>The <code>app.js</code> vs <code>server.js</code> Pattern:</strong> <code>app.js</code> configures Express without calling <code>.listen()</code> to enable Supertest in-memory testing. <code>server.js</code> binds to <code>PORT=5000</code> and handles OS termination signals (<code>SIGTERM</code>, <code>SIGINT</code>).</li>
+        <li><strong>Living Specifications:</strong> Authored <code>PROJECT_RULES.md</code>, <code>docs/PRD.md</code>, <code>docs/HLD.md</code>, <code>docs/LLD.md</code>, and <code>docs/VIVA_PREP.md</code>.</li>
+        <li><strong>Git Baseline:</strong> Initialized local git on <code>main</code>, connected to GitHub remote, and pushed initial commit.</li>
+      </ul>
+    </div>
+
+    <!-- DAY 2 -->
+    <div class="day-card">
+      <div class="day-header">
+        <span class="day-title">Day 2 — Frontend Design System & Application Shell</span>
+        <span class="commit-tag">commit e2e83e7 (Synced with Remote)</span>
+      </div>
+      <p><strong>Primary Goal:</strong> Build candidate placement portal UI, atomic reusable component library, and responsive navigation.</p>
+      <ul>
+        <li><strong>Resolution of Scaffolding Placeholders:</strong> Replaced temporary Day 1 scaffolding cards (*"Architecture Readiness Check"*, *"Viva Preparation Tip"*, *"System Pipeline"*) with candidate-facing profile overviews, 3 core action cards, and triangulation skill matrices.</li>
+        <li><strong>Atomic UI Library (<code>client/src/components/common/</code>):</strong> Implemented <code>Button</code>, <code>Card</code>, <code>Input</code>, <code>Badge</code>, <code>PageHeader</code>, <code>LoadingIndicator</code>, <code>ErrorMessage</code>, and <code>EmptyState</code>.</li>
+        <li><strong>Shell & Navigation:</strong> <code>MainLayout</code> coordinating responsive Navbar with candidate profile menu, collapsible mobile Sidebar with 8 routes, and active route styling.</li>
+        <li><strong>Verification:</strong> Production Vite build verified (1,668 modules compiled in 7.62s with 0 errors).</li>
+      </ul>
+    </div>
+
+    <!-- DAY 3 -->
+    <div class="day-card">
+      <div class="day-header">
+        <span class="day-title">Day 3 — JavaScript Foundations & Safe API Error Normalization</span>
+        <span class="commit-tag">commit 71f7c73 (Synced with Remote)</span>
+      </div>
+      <p><strong>Primary Goal:</strong> Build centralized Axios HTTP client, teach core JavaScript concepts, and implement security-safe error sanitization.</p>
+      <ul>
+        <li><strong>JavaScript Academic Review:</strong> Documented Hoisting (TDZ), Closures, Event Loop execution hierarchy (Call Stack &rarr; Microtask Queue &rarr; Macrotask Queue), Promises vs Callbacks, and Async/Await concurrency.</li>
+        <li><strong>Reusable Axios Client (<code>apiClient.js</code>):</strong> Dynamic base URL from <code>VITE_API_BASE_URL</code>, 15-second timeout, JSON transforms, and auth token injection slot.</li>
+        <li><strong>Safe Error Normalization (<code>apiError.js</code>):</strong> <strong>Enterprise Security Rule:</strong> Catches 5xx server errors and strips database connection strings, passwords, and internal stack traces before displaying safe alerts to candidates.</li>
+        <li><strong>Unmount Safety with <code>AbortController</code>:</strong> Integrated cancellation in <code>BackendStatusBadge</code> and <code>DashboardPage</code> to prevent memory leaks and state updates on unmounted DOM trees.</li>
+        <li><strong>Automated Test Suite:</strong> Created and ran <code>testErrorMapping.js</code> (16 passed, 0 failed).</li>
+      </ul>
+    </div>
+
+    <!-- DAY 4 -->
+    <div class="day-card">
+      <div class="day-header">
+        <span class="day-title">Day 4 — PostgreSQL Relational Database, Prisma ORM & JOINs</span>
+        <span class="commit-tag">commit 4e256f1 (Committed Locally)</span>
+      </div>
+      <p><strong>Primary Goal:</strong> Model relational database entities in PostgreSQL using Prisma ORM, implement JOIN queries, and safe seed scripts.</p>
+      <ul>
+        <li><strong>Relational Schema (<code>schema.prisma</code>):</strong> <code>User</code> (UUID, roles, auth), <code>JobDescription</code> (benchmark campus roles), <code>SavedJob</code> (composite unique bookmark junction), and <code>JobApplication</code> (lifecycle status & match scores) with <code>onDelete: Cascade</code>.</li>
+        <li><strong>Prisma ORM Generation:</strong> Generated Prisma Client (v6.19.3) with full type-safety and automatic parameterized query injection prevention.</li>
+        <li><strong>Database Health & Safety:</strong> Implemented <code>checkDatabaseHealth()</code> with a safe <code>SELECT 1</code> ping that never leaks credentials or connection strings.</li>
+        <li><strong>Relational Service Layer:</strong> Created <code>jobApplicationService.js</code> implementing <code>INNER JOIN</code>, <code>LEFT JOIN ... WHERE IS NULL</code>, and aggregation queries.</li>
+        <li><strong>Automated Test Suite:</strong> Created and ran <code>testRelationalQueries.js</code> (8 passed, 0 failed).</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="page-break"></div>
+
+  <section>
+    <h2>3. Day 5 Preview: MongoDB Document Database Modeling</h2>
+    <p>
+      Tekmira AI utilizes a <strong>Polyglot Persistence Architecture</strong>:
+      while PostgreSQL stores structured, relational business entities (users, job postings, applications), 
+      MongoDB stores polymorphic, deeply nested trees:
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Target Document Schema</th>
+          <th>Storage Strategy</th>
+          <th>Responsibility in Tekmira AI</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>ResumeDocument</code></td>
+          <td>Embedded skills & projects</td>
+          <td>Raw parsed resume text, education array, candidate claims, and parser versioning.</td>
+        </tr>
+        <tr>
+          <td><code>RepositorySnapshot</code></td>
+          <td>Embedded commits & languages</td>
+          <td>Mined public GitHub repositories, verified commits, lines-of-code distributions, and dependencies.</td>
+        </tr>
+        <tr>
+          <td><code>SkillAnalysisReport</code></td>
+          <td>Referenced User & Job IDs</td>
+          <td>Complete 3-way triangulation matrix, verified commit links, confidence scores, and remediation roadmap.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>4. Master Viva Voce & Technical Defense Cheat Sheet</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 30%;">Question</th>
+          <th style="width: 25%;">Examiner's Focus</th>
+          <th style="width: 45%;">Bulletproof Answer</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Why not just evaluate resumes with ChatGPT or Gemini?</strong></td>
+          <td>Architecture & Hallucination Prevention</td>
+          <td>LLMs evaluating only a resume judge <em>claims</em>, not <em>evidence</em>. This rewards resume inflation and causes hallucination. Tekmira AI grounds evaluation by cross-verifying resume claims against empirical GitHub commit code and objective job requirements.</td>
+        </tr>
+        <tr>
+          <td><strong>Why separate <code>app.js</code> from <code>server.js</code>?</strong></td>
+          <td>Separation of Concerns & Automated Testing</td>
+          <td><code>app.js</code> configures middleware and routes without binding to a physical network port, allowing automated testing libraries (Supertest) to test endpoints in-memory. <code>server.js</code> binds to the physical port and manages OS process termination signals.</td>
+        </tr>
+        <tr>
+          <td><strong>Why use UUIDs instead of auto-incrementing integers?</strong></td>
+          <td>Database Security & Privacy</td>
+          <td>Sequential IDs (1, 2, 3...) are vulnerable to enumeration attacks where unauthorized users guess other candidate profiles. UUIDv4 provides 128-bit globally unique, unguessable identifiers.</td>
+        </tr>
+        <tr>
+          <td><strong>How does Prisma ORM prevent SQL Injection?</strong></td>
+          <td>Web Application Security</td>
+          <td>Prisma automatically converts all queries into <strong>parameterized queries</strong> (<code>$1</code>, <code>$2</code>), treating user inputs strictly as literal data rather than executable SQL syntax.</td>
+        </tr>
+        <tr>
+          <td><strong>What is the Microtask Queue vs Macrotask Queue in the Event Loop?</strong></td>
+          <td>JavaScript Runtime Internals</td>
+          <td>The Microtask Queue (Promise callbacks, <code>await</code> continuations) has higher priority. The Event Loop exhausts all pending microtasks immediately after the Call Stack empties and before executing the next Macrotask (<code>setTimeout</code>, I/O).</td>
+        </tr>
+        <tr>
+          <td><strong>Why use <code>AbortController</code> in React <code>useEffect</code>?</strong></td>
+          <td>Memory Leak Prevention</td>
+          <td>It aborts in-flight network requests when a component unmounts or when a new request is launched, preventing memory leaks and avoiding React state updates on unmounted DOM nodes.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer style="margin-top: 40px; border-top: 1px solid var(--border); padding-top: 16px; font-size: 12px; color: var(--muted); text-align: center;">
+    Tekmira AI — Beyond Claims. Driven by Evidence. &copy; 2026 Academic Engineering Capstone.
+  </footer>
+
+</body>
+</html>
