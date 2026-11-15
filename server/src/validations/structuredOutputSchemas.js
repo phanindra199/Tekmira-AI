@@ -142,3 +142,113 @@ export const geminiResumeAnalysisJsonSchema = {
   },
   required: ['summary', 'skills', 'projects', 'unsubstantiatedClaims', 'uncertainties']
 };
+
+
+/**
+ * Zod Schema for Grounded Technical Viva Voce Questions
+ */
+export const InterviewQuestionSchema = z.object({
+  questionIndex: z.number().int().min(0),
+  skill: z.string().trim().min(1),
+  concept: z.string().trim().min(1),
+  difficulty: z.enum(['BEGINNER', 'INTERMEDIATE', 'ADVANCED']).default('INTERMEDIATE'),
+  questionText: z.string().trim().min(10),
+  fileCitation: z.string().default('Repository codebase'),
+  expectedTopics: z.array(z.string()).min(1)
+});
+
+export const GeneratedInterviewSessionSchema = z.object({
+  targetRole: z.string().default('Junior Full Stack Engineer'),
+  difficulty: z.enum(['BEGINNER', 'INTERMEDIATE', 'ADVANCED']).default('INTERMEDIATE'),
+  questions: z.array(InterviewQuestionSchema).min(1),
+  overviewNotes: z.string().default('')
+});
+
+/**
+ * Gemini OpenAPI Schema for Grounded Interview Questions Generation
+ */
+export const geminiInterviewQuestionsJsonSchema = {
+  type: Type.OBJECT,
+  properties: {
+    targetRole: { type: Type.STRING },
+    difficulty: { type: Type.STRING, enum: ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] },
+    overviewNotes: { type: Type.STRING },
+    questions: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          questionIndex: { type: Type.INTEGER },
+          skill: { type: Type.STRING },
+          concept: { type: Type.STRING },
+          difficulty: { type: Type.STRING, enum: ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] },
+          questionText: { type: Type.STRING },
+          fileCitation: { type: Type.STRING },
+          expectedTopics: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING }
+          }
+        },
+        required: ['questionIndex', 'skill', 'concept', 'questionText', 'expectedTopics']
+      }
+    }
+  },
+  required: ['questions', 'difficulty']
+};
+
+/**
+ * Zod Schema for Grounded Viva Voce Answer Evaluation
+ */
+export const EvaluatedAnswerSchema = z.object({
+  score: z.number().min(0).max(100),
+  feedback: z.string().min(10),
+  correctPoints: z.array(z.string()).default([]),
+  missedGaps: z.array(z.string()).default([]),
+  rubricBreakdown: z.object({
+    technicalAccuracy: z.number().min(0).max(100).default(75),
+    evidenceAwareness: z.number().min(0).max(100).default(70),
+    conceptualClarity: z.number().min(0).max(100).default(80)
+  }).default({
+    technicalAccuracy: 75,
+    evidenceAwareness: 70,
+    conceptualClarity: 80
+  }),
+  uncertaintyNotice: z.string().default(
+    'AI viva evaluation is advisory and formative. It is designed for interview practice and is not equivalent to a human academic assessor.'
+  )
+});
+
+/**
+ * Gemini OpenAPI Schema for Viva Voce Answer Evaluation
+ */
+export const geminiEvaluatedAnswerJsonSchema = {
+  type: Type.OBJECT,
+  properties: {
+    score: { type: Type.NUMBER, description: 'Overall score from 0 to 100 based on the 3-part rubric.' },
+    feedback: { type: Type.STRING, description: 'Constructive academic evaluation feedback.' },
+    correctPoints: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: 'Specific correct technical points made by the student.'
+    },
+    missedGaps: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: 'Key technical aspects or implementation trade-offs the student omitted.'
+    },
+    rubricBreakdown: {
+      type: Type.OBJECT,
+      properties: {
+        technicalAccuracy: { type: Type.NUMBER, description: 'Score (0-100) for factual correctness.' },
+        evidenceAwareness: { type: Type.NUMBER, description: 'Score (0-100) for familiarity with project implementation.' },
+        conceptualClarity: { type: Type.NUMBER, description: 'Score (0-100) for clear communication.' }
+      },
+      required: ['technicalAccuracy', 'evidenceAwareness', 'conceptualClarity']
+    },
+    uncertaintyNotice: {
+      type: Type.STRING,
+      description: 'Disclaimer regarding AI-assisted evaluation limits.'
+    }
+  },
+  required: ['score', 'feedback', 'correctPoints', 'missedGaps', 'rubricBreakdown']
+};

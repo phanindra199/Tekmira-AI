@@ -125,3 +125,32 @@ Generate project-specific technical viva voce interview questions grounded stric
 Do not ask generic textbook questions. Ask questions that challenge the candidate to explain their real architectural decisions, trade-offs, and failure handling in their project files.
 `.trim();
 }
+
+
+/**
+ * Prompt Template 7: Grounded Viva Voce Answer Evaluation
+ */
+export function createAnswerEvaluationPrompt({ questionText, expectedTopics, fileCitation, studentAnswer }) {
+  return `
+[INPUT DATA: VIVA QUESTION & CANDIDATE ANSWER]
+Question: "${questionText}"
+Grounded File Reference: "${fileCitation || 'Repository Implementation'}"
+Expected Key Topics: ${JSON.stringify(expectedTopics || [])}
+
+Candidate Submitted Answer:
+"""
+${studentAnswer || ''}
+"""
+
+[EVALUATION INSTRUCTIONS]
+Evaluate the candidate's answer with constructive, cautious academic rigor.
+Evaluate across 3 rubric dimensions:
+1. Technical Accuracy (0-100): Is the conceptual explanation factually correct?
+2. Evidence Awareness (0-100): Did the candidate demonstrate familiarity with their actual codebase and architecture?
+3. Conceptual Clarity (0-100): Was the answer structured, concise, and professional?
+
+Compute overall score as: 0.40 * Technical Accuracy + 0.35 * Evidence Awareness + 0.25 * Conceptual Clarity.
+Identify specific correct points made, and specific missing gaps.
+Include an explicit uncertainty disclosure stating that AI evaluation is advisory and not equivalent to a human academic examiner.
+`.trim();
+}

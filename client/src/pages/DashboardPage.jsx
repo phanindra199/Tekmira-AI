@@ -17,7 +17,11 @@ import {
   ExternalLink,
   RefreshCw,
   Layers,
-  GraduationCap
+  GraduationCap,
+  RotateCw,
+  Code,
+  ShieldAlert,
+  FolderGit2
 } from 'lucide-react';
 import { 
   Button, 
@@ -29,14 +33,18 @@ import {
   Badge, 
   Input, 
   EmptyState,
+  ErrorMessage,
   LoadingIndicator 
 } from '../components/common';
 import { checkBackendHealth } from '../services/healthService';
+import repositoryService from '../services/repositoryService';
+import { normalizeApiError } from '../utils/apiError';
 
 export default function DashboardPage() {
-  // Meaningful state management (Prompt 2.6)
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'skills' | 'activity'
   const [skillSearch, setSkillSearch] = useState('');
+  
+  // Real health and report states (Day 13)
   const [healthStatus, setHealthStatus] = useState({
     loading: true,
     connected: false,
@@ -44,87 +52,180 @@ export default function DashboardPage() {
     error: null
   });
 
-  // Call the real /api/health endpoint with AbortController cleanup to prevent memory leaks and dangling requests
+  const [reportData, setReportData] = useState(null);
+  const [loadingReport, setLoadingReport] = useState(false);
+  const [reportError, setReportError] = useState(null);
+
+  // Fetch real backend health and triangulation report
   useEffect(() => {
     let isMounted = true;
     const controller = new AbortController();
 
-    async function fetchHealth() {
-      setHealthStatus((prev) => ({ ...prev, loading: true }));
-      const result = await checkBackendHealth({ signal: controller.signal });
-
-      if (isMounted && !result.isCancelled) {
-        if (result.connected && result.data?.success) {
-          setHealthStatus({
-            loading: false,
-            connected: true,
-            message: result.data.message,
-            error: null
-          });
-        } else {
-          setHealthStatus({
-            loading: false,
-            connected: false,
-            message: '',
-            error: result.error || 'Backend service unreachable'
-          });
+    async function fetchData() {
+      // 1. Health check
+      try {
+        const healthResult = await checkBackendHealth({ signal: controller.signal });
+        if (isMounted && !healthResult.isCancelled) {
+          if (healthResult.connected && healthResult.data?.success) {
+            setHealthStatus({
+              loading: false,
+              connected: true,
+              message: healthResult.data.message,
+              error: null
+            });
+          } else {
+            setHealthStatus({
+              loading: false,
+              connected: false,
+              message: '',
+              error: healthResult.error || 'Backend service unreachable'
+            });
+          }
         }
+      } catch (e) {
+        if (isMounted) {
+          setHealthStatus({ loading: false, connected: false, message: '', error: 'Service offline' });
+        }
+      }
+
+      // 2. Real Triangulation Report Fetch
+      try {
+        setLoadingReport(true);
+        const cachedRepo = sessionStorage.getItem('tekmira_current_repo_snapshot');
+        let repoSnapshot = null;
+        if (cachedRepo) {
+          try { repoSnapshot = JSON.parse(cachedRepo); } catch (e) {}
+        }
+
+        const reportResponse = await repositoryService.triangulateSkills({
+          repoSnapshot: repoSnapshot || undefined
+        });
+
+        if (isMounted) {
+          setReportData(reportResponse.data);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setReportError(normalizeApiError(err));
+        }
+      } finally {
+        if (isMounted) setLoadingReport(false);
       }
     }
 
-    fetchHealth();
+    fetchData();
 
     return () => {
-      isMounted = false; // Prevents state updates on unmounted component
-      controller.abort(); // Cancels pending HTTP request
+      isMounted = false;
+      controller.abort();
     };
   }, []);
+
+  const handleRefreshReport = async () => {
+    setLoadingReport(true);
+    setReportError(null);
+    try {
+      const cachedRepo = sessionStorage.getItem('tekmira_current_repo_snapshot');
+      let repoSnapshot = null;
+      if (cachedRepo) {
+        try { repoSnapshot = JSON.parse(cachedRepo); } catch (e) {}
+      }
+
+      const reportResponse = await repositoryService.triangulateSkills({
+        repoSnapshot: repoSnapshot || undefined
+      });
+      setReportData(reportResponse.data);
+    } catch (err) {
+      setReportError(normalizeApiError(err));
+    } finally {
+      setLoadingReport(false);
+    }
+  };
+
+  // Filter skills in Tab 2
+  const matrix = reportData?.triangulationMatrix || [];
+  const filteredSkills = matrix.filter(item => 
+    !skillSearch || 
+    item.skillName.toLowerCase().includes(skillSearch.toLowerCase()) ||
+    item.category?.toLowerCase().includes(skillSearch.toLowerCase())
+  );
+
+  const verifiedSkills = filteredSkills.filter(s => s.verificationStatus === 'VERIFIED');
+  const demonstratedBonusSkills = filteredSkills.filter(s => s.verificationStatus === 'UNCLAIMED_STRENGTH');
+  const inflatedSkills = filteredSkills.filter(s => s.verificationStatus === 'INFLATED_CLAIM');
+  const missingCriticalSkills = filteredSkills.filter(s => s.verificationStatus === 'MISSING_CRITICAL');
 
   return (
     <MainLayout
       withSidebar={true}
       title="Placement Readiness Overview"
-      description="Track the verification status of your resume claims against real GitHub code and target job roles."
+      description="Track the empirical verification status of your resume claims against real GitHub code and campus job roles."
       actionButton={
-        <Link to="/analysis-report">
-          <Button variant="primary" size="sm" icon={Award}>
-            Generate Readiness Report
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefreshReport}
+            disabled={loadingReport}
+          >
+            <RotateCw className={`w-3.5 h-3.5 mr-1 ${loadingReport ? 'animate-spin' : ''}`} />
+            <span>Sync Live Data</span>
           </Button>
-        </Link>
+
+          <Link to="/analysis-report">
+            <Button variant="primary" size="sm" icon={Award}>
+              <span>Full Readiness Report</span>
+            </Button>
+          </Link>
+        </div>
       }
     >
-      {/* 1. Student Profile Overview Card */}
+      {/* 1. Student Profile & System Health Strip */}
       <Card className="mb-6 p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-2xl bg-navy-900 text-white flex items-center justify-center font-black text-xl shadow-md">
-              AM
+              TM
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-navy-900">Alex Morgan</h2>
-                <Badge variant="coral">Student Candidate</Badge>
+                <h2 className="text-lg font-bold text-navy-900">Tekmira Candidate Portal</h2>
+                <Badge variant="coral">B.Tech CS Benchmark</Badge>
               </div>
               <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-2 flex-wrap">
                 <span className="flex items-center gap-1">
                   <GraduationCap className="w-3.5 h-3.5 text-navy-900" />
-                  B.Tech Computer Science (2026)
+                  Target Role: Junior Full Stack Engineer
                 </span>
                 <span>•</span>
-                <span>Profile Status: Initial Setup</span>
+                <span>3-Way Evidence Engine Active</span>
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 self-start sm:self-auto">
             <Badge variant={healthStatus.connected ? 'success' : healthStatus.loading ? 'warning' : 'coral'}>
-              {healthStatus.loading ? 'Checking API...' : healthStatus.connected ? 'Engine Online' : 'Engine Offline'}
+              {healthStatus.loading ? 'Checking Backend...' : healthStatus.connected ? 'Services Online (Polyglot)' : 'Backend Offline'}
             </Badge>
           </div>
         </div>
       </Card>
 
-      {/* Dashboard View Tabs (useState) */}
+      {/* Error state if API call failed */}
+      {reportError && (
+        <div className="mb-6">
+          <ErrorMessage message={reportError} onDismiss={() => setReportError(null)} />
+        </div>
+      )}
+
+      {/* Loading Skeleton */}
+      {loadingReport && (
+        <Card className="p-8 text-center mb-6">
+          <LoadingIndicator message="Fetching real analysis report and computing Placement Readiness Index..." />
+        </Card>
+      )}
+
+      {/* Dashboard View Tabs */}
       <div className="flex items-center gap-2 border-b border-slate-200 mb-6 pb-2">
         <button
           onClick={() => setActiveTab('overview')}
@@ -144,7 +245,7 @@ export default function DashboardPage() {
               : 'text-slate-600 hover:text-navy-900 hover:bg-slate-100'
           }`}
         >
-          Skills Breakdown
+          Skills Breakdown ({matrix.length})
         </button>
         <button
           onClick={() => setActiveTab('activity')}
@@ -154,228 +255,168 @@ export default function DashboardPage() {
               : 'text-slate-600 hover:text-navy-900 hover:bg-slate-100'
           }`}
         >
-          Verification History
+          Pipeline Action Guide
         </button>
       </div>
 
       {/* TAB 1: OVERVIEW */}
-      {activeTab === 'overview' && (
-        <div className="space-y-8">
-          {/* 3 Entry Point Action Cards */}
+      {activeTab === 'overview' && reportData && !loadingReport && (
+        <div className="space-y-6">
+          
+          {/* Executive Placement Readiness Gauge Card */}
+          <Card className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              
+              {/* Score Display (4 cols) */}
+              <div className="lg:col-span-4 p-6 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col items-center justify-center text-center">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  Placement Readiness Index (PRI)
+                </span>
+                
+                <div className="relative w-28 h-28 flex items-center justify-center mb-2">
+                  <div className="absolute inset-0 rounded-full border-6 border-slate-200" />
+                  <div 
+                    className="absolute inset-0 rounded-full border-6 border-coral-500 border-t-navy-900 border-r-navy-900 transition-all duration-1000"
+                    style={{
+                      transform: `rotate(${Math.min(360, (reportData.overallReadinessScore / 100) * 360)}deg)`
+                    }}
+                  />
+                  <div className="flex flex-col items-center z-10">
+                    <span className="text-3xl font-extrabold text-navy-900 font-mono">
+                      {reportData.overallReadinessScore}
+                    </span>
+                    <span className="text-[9px] text-slate-400 font-semibold">/ 100</span>
+                  </div>
+                </div>
+
+                <Badge 
+                  variant={
+                    reportData.overallReadinessScore >= 85 ? 'success' : 
+                    reportData.overallReadinessScore >= 70 ? 'navy' : 'warning'
+                  }
+                  className="font-bold text-xs"
+                >
+                  {reportData.readinessTier || 'Placement Ready'}
+                </Badge>
+              </div>
+
+              {/* 4 Quantitative Metrics (8 cols) */}
+              <div className="lg:col-span-8 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Sparkles className="w-4 h-4 text-coral-500" />
+                    <h3 className="text-xs font-bold text-navy-900 uppercase tracking-wider">
+                      Triangulation Evidence Summary
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                    {reportData.summary}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-100">
+                    <span className="block text-[10px] text-emerald-800 font-semibold uppercase">Verified Proofs</span>
+                    <span className="text-lg font-bold text-emerald-900 font-mono">
+                      {reportData.metrics?.verifiedCount || 0}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-navy-50/60 border border-navy-100">
+                    <span className="block text-[10px] text-navy-800 font-semibold uppercase">Bonus Strengths</span>
+                    <span className="text-lg font-bold text-navy-900 font-mono">
+                      {reportData.metrics?.unclaimedStrengthsCount || 0}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-amber-50/60 border border-amber-100">
+                    <span className="block text-[10px] text-amber-800 font-semibold uppercase">Inflated Claims</span>
+                    <span className="text-lg font-bold text-amber-900 font-mono">
+                      {reportData.metrics?.inflatedCount || 0}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-coral-50/60 border border-coral-100">
+                    <span className="block text-[10px] text-coral-800 font-semibold uppercase">Required Missing</span>
+                    <span className="text-lg font-bold text-coral-900 font-mono">
+                      {reportData.metrics?.missingCriticalCount || 0}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* 3 Interactive Pipeline Ingestion Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {/* Entry Point 1: Resume */}
+            {/* Step 1: Resume */}
             <Card hover={true} className="flex flex-col justify-between p-6">
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-navy-900">
                     <FileText className="w-5 h-5 text-coral-500" />
                   </div>
-                  <Badge variant="coral">Step 1 Required</Badge>
+                  <Badge variant="success">Step 1 Ready</Badge>
                 </div>
                 <h3 className="text-base font-bold text-navy-900 mb-1">Resume Ingestion</h3>
                 <p className="text-xs text-slate-500 leading-relaxed mb-4">
-                  Upload your PDF resume to extract claimed technical proficiencies, frameworks, and university projects.
+                  Upload PDF resumes with %PDF- magic byte verification and Zod structured claims extraction.
                 </p>
               </div>
               <Link to="/resume-analysis" className="mt-2">
                 <Button variant="outline" size="sm" className="w-full justify-between" icon={ArrowRight} iconPosition="right">
-                  Upload Resume PDF
+                  Manage Resume PDF
                 </Button>
               </Link>
             </Card>
 
-            {/* Entry Point 2: GitHub */}
+            {/* Step 2: GitHub Miner */}
             <Card hover={true} className="flex flex-col justify-between p-6">
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-navy-900">
                     <Github className="w-5 h-5 text-coral-500" />
                   </div>
-                  <Badge variant="neutral">Step 2 Required</Badge>
+                  <Badge variant="success">Step 2 Ready</Badge>
                 </div>
                 <h3 className="text-base font-bold text-navy-900 mb-1">GitHub Code Miner</h3>
                 <p className="text-xs text-slate-500 leading-relaxed mb-4">
-                  Connect your public GitHub username to inspect repositories, authentic commit frequency, and AST code snippets.
+                  Audit public repository trees, language percentages, commit provenance, and dependency manifests.
                 </p>
               </div>
               <Link to="/github-analysis" className="mt-2">
                 <Button variant="outline" size="sm" className="w-full justify-between" icon={ArrowRight} iconPosition="right">
-                  Connect GitHub
+                  Mine Repository Proof
                 </Button>
               </Link>
             </Card>
 
-            {/* Entry Point 3: Job Description */}
+            {/* Step 3: Viva Voce Prep */}
             <Card hover={true} className="flex flex-col justify-between p-6">
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-navy-900">
-                    <Target className="w-5 h-5 text-coral-500" />
+                    <Sparkles className="w-5 h-5 text-coral-500" />
                   </div>
-                  <Badge variant="neutral">Step 3 Required</Badge>
+                  <Badge variant="coral">AI Viva Active</Badge>
                 </div>
-                <h3 className="text-base font-bold text-navy-900 mb-1">Target Job Description</h3>
+                <h3 className="text-base font-bold text-navy-900 mb-1">AI Viva Preparation</h3>
                 <p className="text-xs text-slate-500 leading-relaxed mb-4">
-                  Select a campus placement benchmark role or paste a custom company job description for competency alignment.
+                  Practice technical interview questions grounded strictly in your verified files with rubric feedback.
                 </p>
               </div>
-              <Link to="/job-match" className="mt-2">
-                <Button variant="outline" size="sm" className="w-full justify-between" icon={ArrowRight} iconPosition="right">
-                  Select Target Role
+              <Link to="/interview-prep" className="mt-2">
+                <Button variant="primary" size="sm" className="w-full justify-between" icon={ArrowRight} iconPosition="right">
+                  Start Technical Viva
                 </Button>
               </Link>
             </Card>
-          </div>
-
-          {/* Triangulation Pipeline Progress Box */}
-          <Card className="p-6">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
-              <div>
-                <h3 className="text-base font-bold text-navy-900 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-coral-500" />
-                  <span>Tekmira Verification Pipeline</span>
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Follow these 3 systematic steps to generate an explainable placement readiness report.
-                </p>
-              </div>
-              <Badge variant="outline">Phase 1 Complete</Badge>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50">
-                <span className="w-6 h-6 rounded-lg bg-navy-900 text-white font-mono text-xs font-bold flex items-center justify-center mb-2">
-                  1
-                </span>
-                <h4 className="text-xs font-bold text-navy-900 mb-1">Claim Ingestion</h4>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Extracts self-reported technical skills from resume text.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50">
-                <span className="w-6 h-6 rounded-lg bg-navy-900 text-white font-mono text-xs font-bold flex items-center justify-center mb-2">
-                  2
-                </span>
-                <h4 className="text-xs font-bold text-navy-900 mb-1">Evidence Mining</h4>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Audits commit histories and dependency trees in public repos.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50">
-                <span className="w-6 h-6 rounded-lg bg-navy-900 text-white font-mono text-xs font-bold flex items-center justify-center mb-2">
-                  3
-                </span>
-                <h4 className="text-xs font-bold text-navy-900 mb-1">Job Benchmark</h4>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Calculates readiness score based on must-have role requirements.
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          {/* Actionable Next Steps Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <Card className="p-6">
-                <h3 className="text-sm font-bold text-navy-900 mb-1 flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-coral-500" />
-                  <span>Next Steps to Verify Placement Readiness</span>
-                </h3>
-                <p className="text-xs text-slate-500 mb-4">
-                  Action items required before your readiness score can be calculated.
-                </p>
-
-                <div className="space-y-3">
-                  <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3">
-                    <span className="w-5 h-5 rounded-full bg-navy-900 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                      1
-                    </span>
-                    <div className="flex-1">
-                      <h4 className="text-xs font-bold text-navy-900">Upload your PDF resume</h4>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        Ensure all college and personal software projects are listed with tech stack details.
-                      </p>
-                    </div>
-                    <Link to="/resume-analysis">
-                      <Button size="sm" variant="outline">Upload</Button>
-                    </Link>
-                  </div>
-
-                  <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3">
-                    <span className="w-5 h-5 rounded-full bg-navy-900 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                      2
-                    </span>
-                    <div className="flex-1">
-                      <h4 className="text-xs font-bold text-navy-900">Link your GitHub profile</h4>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        Verify your public repositories so the mining engine can extract author commits.
-                      </p>
-                    </div>
-                    <Link to="/github-analysis">
-                      <Button size="sm" variant="outline">Connect</Button>
-                    </Link>
-                  </div>
-
-                  <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3">
-                    <span className="w-5 h-5 rounded-full bg-navy-900 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                      3
-                    </span>
-                    <div className="flex-1">
-                      <h4 className="text-xs font-bold text-navy-900">Choose target job role</h4>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        Align your skills against Full-Stack, Frontend, or Backend SDE 1 benchmarks.
-                      </p>
-                    </div>
-                    <Link to="/job-match">
-                      <Button size="sm" variant="outline">Select</Button>
-                    </Link>
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            {/* Score Calculation Criteria Explainer */}
-            <div className="bg-navy-900 text-white rounded-2xl p-6 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-coral-500 text-xs font-bold uppercase tracking-wider mb-2">
-                  <Sparkles className="w-4 h-4" />
-                  <span>Deterministic Model</span>
-                </div>
-                <h4 className="text-base font-bold mb-3">Scoring Formulation</h4>
-                
-                <div className="space-y-3 text-xs">
-                  <div className="flex items-center justify-between pb-2 border-b border-navy-800">
-                    <span className="text-slate-300 font-medium">Job Skill Alignment</span>
-                    <span className="font-mono font-bold text-coral-500">40%</span>
-                  </div>
-                  <div className="flex items-center justify-between pb-2 border-b border-navy-800">
-                    <span className="text-slate-300 font-medium">GitHub Code Proof</span>
-                    <span className="font-mono font-bold text-coral-500">35%</span>
-                  </div>
-                  <div className="flex items-center justify-between pb-2 border-b border-navy-800">
-                    <span className="text-slate-300 font-medium">Commit Recency (12 mo)</span>
-                    <span className="font-mono font-bold text-coral-500">15%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-300 font-medium">Unit Testing Hygiene</span>
-                    <span className="font-mono font-bold text-coral-500">10%</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-navy-800 text-[11px] text-slate-400 flex items-center justify-between">
-                <span>Deterministic Scoring</span>
-                <span className="text-coral-500 font-semibold">100% Explainable</span>
-              </div>
-            </div>
           </div>
         </div>
       )}
 
       {/* TAB 2: SKILLS BREAKDOWN */}
-      {activeTab === 'skills' && (
+      {activeTab === 'skills' && reportData && !loadingReport && (
         <div className="space-y-6">
           <Card className="p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-100 mb-6">
@@ -384,11 +425,11 @@ export default function DashboardPage() {
                   Triangulated Skills Categorization
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Comparison of claimed resume proficiencies, verified GitHub evidence, and target JD prerequisites.
+                  Real-time breakdown of Claimed (C), Demonstrated (D), and Required (R) competencies.
                 </p>
               </div>
 
-              {/* Search Filter (useState) */}
+              {/* Search Filter */}
               <div className="w-full sm:w-64">
                 <Input
                   type="text"
@@ -400,85 +441,145 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Claimed Skills Box */}
-              <div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Box 1: Verified */}
+              <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/20">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-bold text-navy-900 uppercase tracking-wider flex items-center gap-1.5">
-                    <FileText className="w-3.5 h-3.5 text-coral-500" />
-                    <span>Claimed in Resume</span>
+                  <span className="text-xs font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Verified</span>
                   </span>
-                  <Badge variant="neutral">0 Claims</Badge>
+                  <Badge variant="success">{verifiedSkills.length}</Badge>
                 </div>
-                <EmptyState
-                  title="No Claims Ingested"
-                  description="Upload your resume to extract claimed technical proficiencies."
-                  actionLabel="Upload Resume"
-                  onAction={() => window.location.assign('/resume-analysis')}
-                />
+                <div className="space-y-1.5">
+                  {verifiedSkills.map((s, idx) => (
+                    <div key={idx} className="p-2 rounded bg-white border border-emerald-100 text-xs text-slate-700 flex justify-between">
+                      <span className="font-semibold">{s.skillName}</span>
+                      <span className="text-[10px] text-emerald-600 font-mono">Code Proof</span>
+                    </div>
+                  ))}
+                  {verifiedSkills.length === 0 && (
+                    <p className="text-xs text-slate-400 italic">No verified skills match filter.</p>
+                  )}
+                </div>
               </div>
 
-              {/* Demonstrated Skills Box */}
-              <div>
+              {/* Box 2: Bonus Strengths */}
+              <div className="p-4 rounded-xl border border-navy-200 bg-navy-50/20">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-bold text-navy-900 uppercase tracking-wider flex items-center gap-1.5">
-                    <Code2 className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Demonstrated in Code</span>
+                    <Code2 className="w-3.5 h-3.5 text-navy-700" />
+                    <span>Bonus Strengths</span>
                   </span>
-                  <Badge variant="neutral">0 Proofs</Badge>
+                  <Badge variant="navy">{demonstratedBonusSkills.length}</Badge>
                 </div>
-                <EmptyState
-                  title="No Code Proof Yet"
-                  description="Connect your GitHub profile to scan commit trees and code implementations."
-                  actionLabel="Connect GitHub"
-                  onAction={() => window.location.assign('/github-analysis')}
-                />
+                <div className="space-y-1.5">
+                  {demonstratedBonusSkills.map((s, idx) => (
+                    <div key={idx} className="p-2 rounded bg-white border border-navy-100 text-xs text-slate-700 flex justify-between">
+                      <span className="font-semibold">{s.skillName}</span>
+                      <span className="text-[10px] text-navy-600 font-mono">Repo Bonus</span>
+                    </div>
+                  ))}
+                  {demonstratedBonusSkills.length === 0 && (
+                    <p className="text-xs text-slate-400 italic">No bonus skills match filter.</p>
+                  )}
+                </div>
               </div>
 
-              {/* Missing Skills Box */}
-              <div>
+              {/* Box 3: Inflated Claims */}
+              <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/20">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-bold text-navy-900 uppercase tracking-wider flex items-center gap-1.5">
-                    <Target className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Missing Prerequisites</span>
+                  <span className="text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Inflated Claims</span>
                   </span>
-                  <Badge variant="neutral">0 Identified</Badge>
+                  <Badge variant="warning">{inflatedSkills.length}</Badge>
                 </div>
-                <EmptyState
-                  title="No Role Selected"
-                  description="Select a target job description to compute missing competencies."
-                  actionLabel="Select Job"
-                  onAction={() => window.location.assign('/job-match')}
-                />
+                <div className="space-y-1.5">
+                  {inflatedSkills.map((s, idx) => (
+                    <div key={idx} className="p-2 rounded bg-white border border-amber-100 text-xs text-slate-700 flex justify-between">
+                      <span className="font-semibold">{s.skillName}</span>
+                      <span className="text-[10px] text-amber-600 font-mono">0 Proof</span>
+                    </div>
+                  ))}
+                  {inflatedSkills.length === 0 && (
+                    <p className="text-xs text-slate-400 italic">Zero inflated claims detected.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Box 4: Missing Critical */}
+              <div className="p-4 rounded-xl border border-coral-200 bg-coral-50/20">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold text-coral-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <Target className="w-3.5 h-3.5 text-coral-600" />
+                    <span>Missing Critical</span>
+                  </span>
+                  <Badge variant="coral">{missingCriticalSkills.length}</Badge>
+                </div>
+                <div className="space-y-1.5">
+                  {missingCriticalSkills.map((s, idx) => (
+                    <div key={idx} className="p-2 rounded bg-white border border-coral-100 text-xs text-slate-700 flex justify-between">
+                      <span className="font-semibold">{s.skillName}</span>
+                      <span className="text-[10px] text-coral-600 font-mono">Job Gap</span>
+                    </div>
+                  ))}
+                  {missingCriticalSkills.length === 0 && (
+                    <p className="text-xs text-slate-400 italic">All required job skills verified.</p>
+                  )}
+                </div>
               </div>
             </div>
           </Card>
         </div>
       )}
 
-      {/* TAB 3: VERIFICATION HISTORY */}
+      {/* TAB 3: PIPELINE ACTION GUIDE */}
       {activeTab === 'activity' && (
-        <Card className="p-6">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
-            <div>
-              <h3 className="text-base font-bold text-navy-900 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-coral-500" />
-                <span>Verification Audit Log</span>
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Timestamped records of your resume parses, GitHub scans, and generated readiness reports.
-              </p>
-            </div>
-            <Badge variant="outline">0 Total Sessions</Badge>
-          </div>
+        <div className="space-y-6">
+          <Card className="p-6">
+            <h3 className="text-sm font-bold text-navy-900 mb-2">
+              Tekmira Continuous Placement Verification Architecture
+            </h3>
+            <p className="text-xs text-slate-600 mb-6 leading-relaxed">
+              Tekmira AI cross-verifies self-reported resume claims against verified repository artifacts to produce an objective, explainable evaluation for campus placement drives.
+            </p>
 
-          <EmptyState
-            title="No Activity History"
-            description="Complete your first verification pipeline scan to generate an audit record."
-            actionLabel="Start First Scan"
-            onAction={() => window.location.assign('/resume-analysis')}
-          />
-        </Card>
+            <div className="space-y-4 text-xs">
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3">
+                <span className="w-6 h-6 rounded-lg bg-navy-900 text-white font-bold flex items-center justify-center shrink-0">1</span>
+                <div>
+                  <h4 className="font-bold text-navy-900">Step 1: Resume Ingestion & Parsing</h4>
+                  <p className="text-slate-600 mt-0.5">Upload multi-page PDF resumes. Multer memory streaming enforces the 5MB guard and validates official <code>%PDF-</code> magic byte signatures before parsing digital text streams.</p>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3">
+                <span className="w-6 h-6 rounded-lg bg-navy-900 text-white font-bold flex items-center justify-center shrink-0">2</span>
+                <div>
+                  <h4 className="font-bold text-navy-900">Step 2: GitHub Evidence Mining</h4>
+                  <p className="text-slate-600 mt-0.5">Submit public GitHub repositories. Tekmira AI inspects language byte distributions, parses package dependencies (<code>package.json</code>, <code>requirements.txt</code>), audits test suites, and verifies authentic commit authorship with zero code execution.</p>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3">
+                <span className="w-6 h-6 rounded-lg bg-navy-900 text-white font-bold flex items-center justify-center shrink-0">3</span>
+                <div>
+                  <h4 className="font-bold text-navy-900">Step 3: 3-Way Triangulation & Placement Readiness Index</h4>
+                  <p className="text-slate-600 mt-0.5">The engine executes deterministic 3-way matching ($C \times D \times R$) to classify competencies into <code>VERIFIED</code>, <code>UNCLAIMED_STRENGTH</code>, <code>INFLATED_CLAIM</code>, and <code>MISSING_CRITICAL</code>, generating an explainable score and actionable remediation plan.</p>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3">
+                <span className="w-6 h-6 rounded-lg bg-coral-500 text-white font-bold flex items-center justify-center shrink-0">4</span>
+                <div>
+                  <h4 className="font-bold text-navy-900">Step 4: Grounded AI Technical Viva Preparation</h4>
+                  <p className="text-slate-600 mt-0.5">Generate technical interview questions referencing your real implementation files, submit answers, and receive constructive rubric evaluation across Technical Accuracy, Evidence Awareness, and Conceptual Clarity.</p>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
       )}
     </MainLayout>
   );

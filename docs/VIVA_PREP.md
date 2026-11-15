@@ -722,3 +722,57 @@ Where:
    - **Answer:** *"SSRF occurs when an attacker tricks a backend server into making HTTP requests to internal, private network resources (such as AWS metadata endpoints at 169.254.169.254 or local Redis instances). Tekmira AI defends against SSRF by strictly enforcing a hostname whitelist (`github.com` only), validating protocols to HTTP/HTTPS, rejecting path traversal identifiers (`/..`), and verifying repository slugs via regular expressions before any network request is initiated."*
 3. **Viva Question:** *"How does the Placement Readiness Index (PRI) handle students who write automated unit tests?"*
    - **Answer:** *"In our formula, engineering rigor ($S_{\text{rigor}}$) contributes 15% to the final readiness score. The engine inspects the git tree for test files (`*.test.js`, `*.spec.js`) and tests frameworks (`jest`, `supertest`, `vitest`). If present, the candidate is awarded up to 100 points in the rigor component, reflecting industry expectations for software quality."*
+
+---
+
+## 17. Section 17: Dashboard Integration & Async State Architecture (Day 13)
+
+### 17.1 Real-Time API Data Binding vs Mock Inventions
+- **The Core Rule:** **Never invent or hardcode production metrics.**
+- The Tekmira AI candidate dashboard connects to real endpoints (`/api/analysis/triangulate`, `/api/health`, `/api/jobs`).
+- When a candidate has not yet ingested their resume or connected a repository, the dashboard shows clean, accessible empty states with immediate calls to action, rather than synthetic or fabricated 100% scores.
+
+### 17.2 Race Condition & Memory Leak Prevention in React `useEffect`
+- **The Vulnerability (Stale Updates & Dangling Requests):**
+  - In single-page applications, rapid navigation or tab switching causes components to unmount before asynchronous HTTP promises resolve.
+  - Attempting to update state on an unmounted component leads to memory leaks, browser warnings, and race conditions where outdated responses overwrite fresh user inputs.
+- **Tekmira AI's Defense:**
+  - **`AbortController`:** Every asynchronous effect instantiates an `AbortController`. The effect cleanup function invokes `controller.abort()`, canceling in-flight network requests at the browser socket level.
+  - **`isMounted` Flag:** Ensures state setters (`setHealthStatus`, `setReportData`) execute strictly when the component remains mounted in the active DOM tree.
+
+---
+
+## 18. Section 18: Grounded AI Technical Viva Voce & Rubric Evaluation (Day 14)
+
+### 18.1 Codebase-Grounded Questions vs Generic LLM Quizzing
+- **The Generic AI Failure Mode:**
+  - Standard chatbots ask generic textbook trivia (*"What is the difference between SQL and NoSQL?"*). Candidates memorize boilerplate answers without having built real systems.
+- **Tekmira AI's Grounded Approach:**
+  - Questions are synthesized strictly from **verified repository artifacts** and file paths extracted in Day 11 and 12.
+  - Example: Instead of asking *"What is error middleware in Express?"*, Tekmira AI asks:
+    > *"In your Express backend (`server/src/app.js`), explain why the centralized `errorHandler` middleware must be registered after all route handlers and why error middleware functions require exactly four arguments (`err, req, res, next`)."*
+
+### 18.2 The 3-Part Viva Voce Scoring Rubric
+Student viva answers are evaluated against a transparent 3-part academic rubric:
+1. **Technical Accuracy (40% Weight):** Are the underlying computer science principles factually and architecturally correct?
+2. **Evidence Awareness (35% Weight):** Did the candidate demonstrate genuine familiarity with their actual codebase, trade-offs, and file structures?
+3. **Conceptual Clarity (25% Weight):** Was the answer structured, articulate, and free of vague buzzwords?
+
+$$\text{Viva Score} = \text{round}(0.40 \times \text{Accuracy} + 0.35 \times \text{Evidence} + 0.25 \times \text{Clarity})$$
+
+### 18.3 Explicit AI Uncertainty & Advisory Disclosure
+- **Examiner Ethics & Safety:**
+  - Automated AI evaluations must never be presented as absolute or flawless.
+  - Every evaluated response includes an explicit uncertainty notice:
+    > *"AI viva evaluation is advisory and formative. It is designed for interview practice and is not equivalent to a human academic assessor."*
+  - This establishes ethical AI boundaries suitable for university project vivas and academic compliance.
+
+---
+
+### 18.4 Viva Voce Questions & Technical Answers
+1. **Viva Question:** *"How does Tekmira AI generate interview questions that cannot be cheated with generic memorized answers?"*
+   - **Answer:** *"By using Codebase Grounding. Questions are generated dynamically from the candidate's verified GitHub snapshot (`RepositorySnapshot`) and cited file paths (e.g., `server/src/app.js`, `prisma/schema.prisma`). The student is required to explain specific architectural decisions and error boundaries in their own code, which cannot be answered by memorizing generic textbook definitions."*
+2. **Viva Question:** *"Why does the answer evaluation prompt use structured output and an explicit rubric instead of freeform text grading?"*
+   - **Answer:** *"Freeform grading is prone to inconsistent marks and subjective hallucination. By enforcing a 3-part rubric (Technical Accuracy, Evidence Awareness, Conceptual Clarity) via Zod schemas and Gemini's `responseJsonSchema`, we guarantee mathematically consistent scores, itemized correct points, and explicit gap disclosures."*
+3. **Viva Question:** *"How does the frontend dashboard manage data when multiple asynchronous endpoints are queried simultaneously?"*
+   - **Answer:** *"The dashboard uses parallel `AbortController` lifecycles inside `useEffect`. If the user navigates away before responses complete, pending requests are aborted to prevent memory leaks and race conditions. Furthermore, each section maintains its own distinct loading and error boundaries so failure in one service does not crash the entire candidate portal."*

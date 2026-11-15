@@ -5,6 +5,7 @@ import userRoutes from './userRoutes.js';
 import jobRoutes from './jobRoutes.js';
 import analysisRoutes from './analysisRoutes.js';
 import aiRoutes from './aiRoutes.js';
+import interviewRoutes from './interviewRoutes.js';
 
 const router = Router();
 
@@ -18,6 +19,7 @@ v1Router.use('/users', userRoutes);
 v1Router.use('/jobs', jobRoutes);
 v1Router.use('/analysis', analysisRoutes);
 v1Router.use('/ai', aiRoutes);
+v1Router.use('/interview', interviewRoutes);
 
 router.use('/v1', v1Router);
 
@@ -27,5 +29,6 @@ router.use('/users', userRoutes);
 router.use('/jobs', jobRoutes);
 router.use('/analysis', analysisRoutes);
 router.use('/ai', aiRoutes);
+router.use('/interview', interviewRoutes);
 
 export default router;
