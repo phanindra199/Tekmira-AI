@@ -14,7 +14,8 @@
     "test:relational": "node src/database/testRelationalQueries.js",
     "test:mongo": "node src/database/testMongoCrud.js",
     "test:auth": "node src/test/testAuthSecurity.js",
-    "test": "node src/database/testRelationalQueries.js && node src/database/testMongoCrud.js && node src/test/testAuthSecurity.js"
+    "test:rest": "node src/test/testRestApiIntegration.js",
+    "test": "node src/database/testRelationalQueries.js && node src/database/testMongoCrud.js && node src/test/testAuthSecurity.js && node src/test/testRestApiIntegration.js"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
@@ -24,7 +25,8 @@
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.12.1",
-    "prisma": "^6.19.3"
+    "prisma": "^6.19.3",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"

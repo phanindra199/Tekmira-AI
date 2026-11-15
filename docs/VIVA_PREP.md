@@ -477,5 +477,51 @@ Middleware executes strictly in the sequence registered in `app.js`:
 3. **Viva Question:** *"How do you handle user logout with stateless JWTs?"*
    - **Answer:** *"On the client, logout is achieved immediately by clearing the token from memory or storage. For high-security invalidation prior to expiration, token blacklisting in a fast in-memory store (Redis with TTL matching token expiry) or rotating refresh token families in PostgreSQL is implemented."*
 
+---
+
+## 11. REST API Architecture, HTTP Semantics & Zod Validation (Day 7)
+
+### 11.1 The 6 Core Constraints of REST (Representational State Transfer)
+1. **Client-Server Architecture:** Complete separation of user interface concerns (React/Vite client) from data storage and business logic concerns (Express REST API).
+2. **Statelessness:** Every HTTP request from client to server must contain all of the information needed to understand and complete the request (Bearer JWT in headers). The server retains no session state.
+3. **Cacheability:** Responses must explicitly or implicitly define themselves as cacheable or non-cacheable (`Cache-Control` headers).
+4. **Uniform Interface:**
+   - Resource identification in requests (nouns like `/api/v1/jobs`, `/api/v1/resumes`).
+   - Resource manipulation through representations (JSON bodies with `POST`, `PUT`, `DELETE`).
+   - Self-descriptive messages (HTTP headers and status codes).
+5. **Layered System:** The client cannot tell whether it is connected directly to the end server, or to an intermediary along the way (reverse proxy, load balancer, API gateway).
+6. **Code on Demand (Optional):** Servers can temporarily extend or customize client functionality by transferring executable code (e.g. JavaScript widgets).
+
+---
+
+### 11.2 Semantic HTTP Status Code Taxonomy
+Tekmira AI strictly enforces standardized HTTP status codes:
+- **`200 OK`:** Successful retrieval or modification (`GET`, `PUT`, `PATCH`).
+- **`201 Created`:** Successful creation of a new database entity (`POST /api/auth/register`, `POST /api/resumes`).
+- **`400 Bad Request`:** Client sent invalid parameters or failed Zod schema validation. Includes `errors` array.
+- **`401 Unauthorized`:** Request lacks valid authentication credentials (missing, invalid, or expired Bearer token).
+- **`403 Forbidden`:** Authenticated identity lacks permission for the requested action (e.g., student accessing admin route, or candidate attempting to read another candidate's resume).
+- **`404 Not Found`:** Target URI or database entity does not exist.
+- **`409 Conflict`:** Request violates uniqueness constraints (e.g. duplicate email registration or duplicate job bookmark).
+- **`500 Internal Server Error`:** Unhandled server crash. Sanitized to never expose stack traces or database connection strings.
+
+---
+
+### 11.3 Runtime Request Validation with Zod
+- **Why validate at the boundary?** Never trust client input. TypeScript or JavaScript type assertions only exist at compile time; runtime attacks, malformed JSON, and unexpected nulls occur in production.
+- **Zod Schema Parsing:** Zod inspects `req.body`, transforms types (e.g. string numbers to integers), trims whitespace, and automatically halts invalid requests before reaching business logic.
+- **Field-Level Error Mapping:** Instead of generic failures, Zod provides exact paths (`"field": "password", "message": "Password must be at least 8 characters"`), enabling frontend forms to highlight exact fields.
+
+---
+
+### 11.4 Viva Voce Questions & Practice Exercises
+1. **Viva Question:** *"Why should RESTful endpoints use nouns instead of verbs (e.g., `POST /api/jobs` instead of `POST /api/createJob`)?"*
+   - **Answer:** *"In RESTful architecture, URIs identify resources (nouns), while the standard HTTP verbs (`GET`, `POST`, `PUT`, `DELETE`) communicate the action to perform on that resource. Using verbs in URIs violates the Uniform Interface constraint and makes the API RPC-style rather than RESTful."*
+2. **Viva Question:** *"What is the difference between `PUT` and `PATCH` in REST?"*
+   - **Answer:** *"A `PUT` request is an idempotent complete replacement of the target resource: any fields omitted from the payload are replaced with null or defaults. A `PATCH` request represents a partial modification, updating only the specific fields supplied in the request body while leaving all other properties untouched."*
+3. **Viva Question:** *"What is the difference between HTTP 401 Unauthorized and HTTP 403 Forbidden?"*
+   - **Answer:** *"HTTP 401 means 'Unauthenticated'—the server does not know who you are because credentials are missing or invalid. HTTP 403 means 'Forbidden'—the server knows who you are, but you do not have permission to access the requested resource."*
+
+
 
 
