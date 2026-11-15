@@ -1,0 +1,96 @@
+// Tekmira AI — PostgreSQL Relational Schema via Prisma ORM
+// Configured for polyglot persistence: Relational data (users, jobs, applications)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  RECRUITER
+  ADMIN
+}
+
+enum ApplicationStatus {
+  SAVED
+  APPLIED
+  INTERVIEWING
+  OFFER
+  REJECTED
+}
+
+model User {
+  id           String           @id @default(uuid())
+  email        String           @unique
+  passwordHash String
+  fullName     String
+  githubHandle String?
+  collegeName  String?
+  graduationYr Int?
+  role         Role             @default(STUDENT)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  // Relational associations
+  savedJobs    SavedJob[]
+  applications JobApplication[]
+
+  @@map("users")
+}
+
+model JobDescription {
+  id             String           @id @default(uuid())
+  title          String
+  company        String
+  location       String?
+  jobType        String?          // e.g. "Full-Time", "Internship"
+  rawText        String           @db.Text
+  requiredSkills String[]         // Standardized skill tags array
+  minExperience  Int              @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  // Relational associations
+  savedBy        SavedJob[]
+  applications   JobApplication[]
+
+  @@map("job_descriptions")
+}
+
+model SavedJob {
+  id        String         @id @default(uuid())
+  userId    String
+  jobId     String
+  savedAt   DateTime       @default(now())
+
+  // Referential Integrity with Cascade Delete
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job       JobDescription @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  // Composite unique constraint: Candidate can save a job only once
+  @@unique([userId, jobId])
+  @@map("saved_jobs")
+}
+
+model JobApplication {
+  id          String            @id @default(uuid())
+  userId      String
+  jobId       String
+  status      ApplicationStatus @default(SAVED)
+  matchScore  Float?            // Calculated readiness score (0.0 to 100.0)
+  notes       String?           @db.Text
+  appliedAt   DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  // Referential Integrity with Cascade Delete
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job         JobDescription    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("job_applications")
+}

@@ -162,22 +162,109 @@ tekmira-ai/
 
 ---
 
-## 4. Planned Database Models & Schemas (Scheduled — Module 4)
+## 4. Database Models & Schemas (PostgreSQL Implemented — Day 4)
 
-> **Implementation Note:** Database connections are purposefully deferred to Module 4. Below are the approved schemas ready for migration.
+### 4.1 PostgreSQL Relational Schema via Prisma (`server/prisma/schema.prisma`)
+Implemented and generated via Prisma Client (`v6.19.3`):
 
-### 4.1 PostgreSQL Relational DDL (Planned)
+```prisma
+// server/prisma/schema.prisma
 
-```sql
--- 1. Users & Authentication Table
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    full_name VARCHAR(120) NOT NULL,
-    github_username VARCHAR(100),
-    degree VARCHAR(100) DEFAULT 'B.Tech Computer Science',
-    graduation_year INT DEFAULT 2026,
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  RECRUITER
+  ADMIN
+}
+
+enum ApplicationStatus {
+  SAVED
+  APPLIED
+  INTERVIEWING
+  OFFER
+  REJECTED
+}
+
+model User {
+  id           String           @id @default(uuid())
+  email        String           @unique
+  passwordHash String
+  fullName     String
+  githubHandle String?
+  collegeName  String?
+  graduationYr Int?
+  role         Role             @default(STUDENT)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  savedJobs    SavedJob[]
+  applications JobApplication[]
+
+  @@map("users")
+}
+
+model JobDescription {
+  id             String           @id @default(uuid())
+  title          String
+  company        String
+  location       String?
+  jobType        String?
+  rawText        String           @db.Text
+  requiredSkills String[]
+  minExperience  Int              @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  savedBy        SavedJob[]
+  applications   JobApplication[]
+
+  @@map("job_descriptions")
+}
+
+model SavedJob {
+  id        String         @id @default(uuid())
+  userId    String
+  jobId     String
+  savedAt   DateTime       @default(now())
+
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job       JobDescription @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
+  @@map("saved_jobs")
+}
+
+model JobApplication {
+  id          String            @id @default(uuid())
+  userId      String
+  jobId       String
+  status      ApplicationStatus @default(SAVED)
+  matchScore  Float?
+  notes       String?           @db.Text
+  appliedAt   DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job         JobDescription    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("job_applications")
+}
+```
+
+### 4.2 Database Service Layer (`server/src/services/jobApplicationService.js`)
+- **`getUserApplications(userId)`**: Relational query joining `job_applications` with `job_descriptions` (`INNER JOIN`).
+- **`getUserSavedJobs(userId)`**: Relational query joining `saved_jobs` with `job_descriptions`.
+- **`getJobWithApplicants(jobId)`**: Relational query joining `job_descriptions` with `job_applications` and candidate `users`.
+- **`checkDatabaseHealth()`**: Safe connection ping (`SELECT 1`) that never exposes credentials or passwords in health responses.
     role VARCHAR(20) DEFAULT 'student', -- 'student', 'recruiter', 'admin'
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

@@ -7,12 +7,18 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch-path=src src/server.js"
+    "dev": "node --watch-path=src src/server.js",
+    "prisma:generate": "prisma generate --schema=prisma/schema.prisma",
+    "prisma:migrate": "prisma migrate dev --schema=prisma/schema.prisma",
+    "db:seed": "node src/database/seed.js",
+    "test": "node src/database/testRelationalQueries.js"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "prisma": "^6.19.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"

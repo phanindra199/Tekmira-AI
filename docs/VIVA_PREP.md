@@ -282,3 +282,94 @@ $$R = 0.40 \times S_{\text{match}} + 0.35 \times E_{\text{code}} + 0.15 \times D
 - **Viva Voce Question:** *"What happens if one Promise in `Promise.all()` rejects? What alternative can you use if you want all independent operations to settle regardless of failures?"*
   - **Answer:** *"If any promise in `Promise.all()` rejects, the entire `Promise.all()` immediately rejects (Fail-Fast behavior). If we want all operations to complete regardless of individual errors, we use `Promise.allSettled()`, which returns an array of objects detailing the status (`fulfilled` or `rejected`) and value/reason for each promise."*
 
+---
+
+## 8. Relational Database Concepts, PostgreSQL & SQL JOINs (Day 4)
+
+### 8.1 Why PostgreSQL for Relational Data in Tekmira AI?
+Tekmira AI employs a **Polyglot Persistence Architecture**:
+- **PostgreSQL (ACID-Compliant Relational DB):** Stores transactional, structured, and relational business records:
+  - Candidates / Users (authentication, credentials, profile metadata)
+  - Standardized Job Descriptions & Benchmarks
+  - Saved Jobs and Job Applications (track progress: Applied $\to$ Interviewing $\to$ Offer)
+- **MongoDB (Document-Oriented DB - Day 5):** Stores polymorphic, semi-structured, deeply nested JSON trees:
+  - Raw extracted resume text and NLP entity ASTs
+  - GitHub repository snapshot trees, commit diffs, and lines-of-code distributions
+  - Full Gemini 3-way triangulation reports
+
+---
+
+### 8.2 Primary Keys, Foreign Keys & Referential Integrity
+1. **Primary Key (PK):** A unique identifier for every row in a table.
+   - *Tekmira AI Decision:* We use **UUIDv4** (`@id @default(uuid())`) instead of auto-incrementing integers (`1, 2, 3...`) to eliminate enumeration attacks (where malicious users guess other students' profiles by iterating IDs).
+2. **Foreign Key (FK):** A column that establishes a formal constraint linking a row in a child table to a primary key in a parent table (e.g. `userId` in `job_applications` pointing to `id` in `users`).
+3. **Referential Action (`ON DELETE CASCADE`):** Ensures data integrity. If a student deletes their account, all associated bookmarks (`saved_jobs`) and active applications (`job_applications`) are automatically cleaned up, preventing orphaned foreign key references.
+
+---
+
+### 8.3 Database Normalization (1NF, 2NF, 3NF)
+- **1st Normal Form (1NF):** Eliminate repeating groups. Every column contains atomic (indivisible) values. Each record is unique.
+- **2nd Normal Form (2NF):** Satisfies 1NF, and all non-key columns are fully dependent on the *entire* primary key (no partial functional dependencies).
+- **3rd Normal Form (3NF):** Satisfies 2NF, and no non-key column depends on another non-key column (no transitive dependencies).
+  - *Tekmira AI Example:* Instead of storing company name, recruiter email, and job title repeatedly inside every `job_applications` row, we normalize: company details reside exclusively in `job_descriptions`, and `job_applications` only references `jobId`.
+
+---
+
+### 8.4 SQL JOIN Mechanics with Tekmira AI Examples
+When queries need data across multiple normalized tables, SQL JOINs combine rows based on related columns:
+
+#### 1. `INNER JOIN`
+Returns only records that have matching values in **both** tables.
+- *Use Case:* Fetch all candidates who have actively submitted a job application:
+```sql
+SELECT u.fullName, u.githubHandle, j.title, j.company, a.status, a.matchScore
+FROM users u
+INNER JOIN job_applications a ON u.id = a.userId
+INNER JOIN job_descriptions j ON a.jobId = j.id;
+```
+
+#### 2. `LEFT OUTER JOIN`
+Returns **all** records from the left table, and matched records from the right table (filling `NULL` if no match exists).
+- *Use Case:* Find all registered students and their saved jobs (including students who haven't saved any jobs yet):
+```sql
+SELECT u.fullName, u.email, j.title, j.company, s.savedAt
+FROM users u
+LEFT JOIN saved_jobs s ON u.id = s.userId
+LEFT JOIN job_descriptions j ON s.jobId = j.id;
+```
+
+#### 3. Identifying Inactive Candidates with `LEFT JOIN ... WHERE ... IS NULL`:
+```sql
+-- Students who have NOT applied to any job yet:
+SELECT u.fullName, u.email
+FROM users u
+LEFT JOIN job_applications a ON u.id = a.userId
+WHERE a.id IS NULL;
+```
+
+---
+
+### 8.5 Prisma ORM Architecture & Security
+- **What is Prisma?** An open-source Object-Relational Mapper (ORM) that translates JavaScript/TypeScript method calls into optimized SQL queries.
+- **SQL Injection Prevention:** Prisma automatically uses **parameterized queries** for all generated SQL operations (e.g., `SELECT * FROM users WHERE email = $1`), neutralizing SQL injection attacks without requiring manual string escaping.
+- **Declarative Schema (`schema.prisma`):** Serves as the single source of truth for database models, relationships, and migration generation.
+- **Prisma Client (`@prisma/client`):** Auto-generated query builder tailored specifically to the project's schema.
+
+---
+
+### 8.6 Viva Voce Questions & Practice Exercises
+1. **Viva Question:** *"Why do we use an ORM like Prisma instead of raw SQL queries in our Express controllers?"*
+   - **Answer:** *"Prisma provides three enterprise benefits: (1) Automatic SQL injection prevention through parameterized queries, (2) compile-time type safety preventing typos in table/column names, and (3) an automated migration engine (`prisma migrate`) that versions schema changes across team environments."*
+2. **Viva Question:** *"What is the performance difference between an `INNER JOIN` and a `LEFT JOIN`?"*
+   - **Answer:** *"An `INNER JOIN` only scans and indexes matching keys across both tables and discards non-matches early. A `LEFT JOIN` must preserve all rows from the primary table and evaluate potential matches or generate NULL rows, which can be more memory and CPU intensive on large unindexed datasets."*
+3. **Practice Exercise:** Write a query to find the top 5 job postings with the highest average candidate readiness match scores:
+```sql
+SELECT j.title, j.company, ROUND(AVG(a.matchScore)::numeric, 2) AS avgScore, COUNT(a.id) AS totalApplicants
+FROM job_descriptions j
+INNER JOIN job_applications a ON j.id = a.jobId
+WHERE a.matchScore IS NOT NULL
+GROUP BY j.id, j.title, j.company
+ORDER BY avgScore DESC
+LIMIT 5;
+```
+
