@@ -522,6 +522,46 @@ Tekmira AI strictly enforces standardized HTTP status codes:
 3. **Viva Question:** *"What is the difference between HTTP 401 Unauthorized and HTTP 403 Forbidden?"*
    - **Answer:** *"HTTP 401 means 'Unauthenticated'—the server does not know who you are because credentials are missing or invalid. HTTP 403 means 'Forbidden'—the server knows who you are, but you do not have permission to access the requested resource."*
 
+---
+
+## 12. Large Language Models, Gemini API & Prompt Engineering Fundamentals (Day 8)
+
+### 12.1 What is an LLM?
+- **Transformer Architecture:** A Large Language Model is a deep neural network trained on vast text corpora using self-attention mechanisms to predict the statistical probability distribution of the next token given preceding context.
+- **Tokens vs Words:** Models process text as sub-word tokens (~4 characters or 0.75 words per token). Token limits constrain maximum prompt context and response lengths.
+- **Inference vs Training:** In production, Tekmira AI executes **inference**—passing structured inputs and system instructions to a pre-trained model (`gemini-2.5-flash`) to perform analytical extraction without modifying underlying model weights.
+
+### 12.2 API Key Architecture & Secret Hygiene
+- **Cryptographic Identifier:** An API key acts as a combined identifier and secret token authorizing HTTP requests against Google's API Gateway.
+- **The Golden Security Rule:** API keys must **NEVER** be committed to Git or embedded in client-side code (such as React Vite variables prefixed with `VITE_`). Client-side variables are bundled into public JavaScript files and easily extracted by anyone inspecting network traffic or bundle sources.
+- **The Secure Proxy Pattern:** The React frontend communicates strictly with the Express backend (`POST /api/ai/analyze-resume`). The Express server injects `GEMINI_API_KEY` from protected server environment variables, calls Google Gemini, and returns sanitized data back to the client.
+
+### 12.3 System Instructions & Prompt Engineering
+- **System Instructions (`systemInstruction`):** High-priority foundational constraints setting the model's persona, operational boundaries, and anti-hallucination rules before user contents are evaluated.
+- **Zero-Hallucination Policy:** In Tekmira AI, the prompt explicitly instructs Gemini: *"Extract only explicit technical claims. Do not assume or invent competencies not present in the text."*
+- **Temperature & Determinism:**
+  - `temperature: 0.0 – 0.2`: Highly deterministic, focused, reproducible output. Ideal for structured resume parsing and evidence extraction.
+  - `temperature: 0.7 – 1.0`: High randomness, diverse token selection. Used for creative storytelling, but dangerous for objective technical assessment.
+
+### 12.4 Third-Party API Failure Modes & Error Mapping
+| Failure Scenario | Upstream Error | Mapped HTTP Status | Defensive Handling |
+| :--- | :--- | :--- | :--- |
+| **Missing API Key** | `GEMINI_API_KEY` unset | `503 Service Unavailable` | Backend intercepts before calling Gemini; advises developer to set `.env`. |
+| **Rate Limit / Quota Exceeded** | `429 Too Many Requests` | `429 Too Many Requests` | Returns friendly retry message without crashing the server process. |
+| **Invalid Key / Unauthorized** | `401 / 403 Forbidden` | `502 Bad Gateway` | Masks secret details; alerts backend administrator to verify credentials. |
+| **Model Not Found** | `404 Not Found` | `502 Bad Gateway` | Catches deprecated or misspelt model names. |
+| **Network Timeout** | `ETIMEDOUT / 30s abort` | `504 Gateway Timeout` | Cancels hanging requests; releases server memory. |
+
+---
+
+### 12.5 Viva Voce Questions & Practice Exercises
+1. **Viva Question:** *"Why should a backend server proxy calls to Gemini instead of having the React frontend call the Gemini API directly?"*
+   - **Answer:** *"If the React client calls Gemini directly, the `GEMINI_API_KEY` must be embedded in the browser application. Any user can open DevTools, inspect network requests or bundle sources, and steal the key, leading to quota exhaustion or massive billing liabilities. Routing calls through our Express backend keeps the key securely on the server, allows us to enforce rate limits, validate payloads with Zod, and authenticate the requesting user."*
+2. **Viva Question:** *"What is temperature in LLM generation, and why is a low temperature essential for Tekmira AI?"*
+   - **Answer:** *"Temperature controls the randomness of the next-token probability distribution. A high temperature flattens the distribution, choosing less probable tokens for creative variety. For Tekmira AI's resume and evidence analysis, we require strict objectivity and reproducibility, so we set a low temperature (0.2) to ensure the model extracts only literal skills and avoids hallucinating fictitious technical proficiencies."*
+3. **Viva Question:** *"How does Tekmira AI handle third-party API failures (like Gemini quota exhaustion) without crashing the application?"*
+   - **Answer:** *"All calls to the `@google/genai` SDK are wrapped in try-catch blocks inside `geminiService.js`. Errors are inspected for status codes (like 429 for rate limits or 401 for auth) and mapped to custom `AppError` instances with standardized HTTP status codes. The centralized Express error handler converts these into sanitized JSON responses, ensuring server uptime and clean client error banners."*
+
 
 
 

@@ -4,6 +4,7 @@ import authRoutes from './authRoutes.js';
 import userRoutes from './userRoutes.js';
 import jobRoutes from './jobRoutes.js';
 import analysisRoutes from './analysisRoutes.js';
+import aiRoutes from './aiRoutes.js';
 
 const router = Router();
 
@@ -16,6 +17,7 @@ v1Router.use('/auth', authRoutes);
 v1Router.use('/users', userRoutes);
 v1Router.use('/jobs', jobRoutes);
 v1Router.use('/analysis', analysisRoutes);
+v1Router.use('/ai', aiRoutes);
 
 router.use('/v1', v1Router);
 
@@ -24,5 +26,6 @@ router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/jobs', jobRoutes);
 router.use('/analysis', analysisRoutes);
+router.use('/ai', aiRoutes);
 
 export default router;
