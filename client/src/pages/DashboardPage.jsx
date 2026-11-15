@@ -44,15 +44,16 @@ export default function DashboardPage() {
     error: null
   });
 
-  // Call the real /api/health endpoint with cleanup to prevent memory leaks / state updates on unmounted component
+  // Call the real /api/health endpoint with AbortController cleanup to prevent memory leaks and dangling requests
   useEffect(() => {
     let isMounted = true;
+    const controller = new AbortController();
 
     async function fetchHealth() {
       setHealthStatus((prev) => ({ ...prev, loading: true }));
-      const result = await checkBackendHealth();
+      const result = await checkBackendHealth({ signal: controller.signal });
 
-      if (isMounted) {
+      if (isMounted && !result.isCancelled) {
         if (result.connected && result.data?.success) {
           setHealthStatus({
             loading: false,
@@ -74,7 +75,8 @@ export default function DashboardPage() {
     fetchHealth();
 
     return () => {
-      isMounted = false; // Cleanup flag
+      isMounted = false; // Prevents state updates on unmounted component
+      controller.abort(); // Cancels pending HTTP request
     };
   }, []);
 

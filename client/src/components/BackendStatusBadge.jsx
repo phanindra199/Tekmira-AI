@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { checkBackendHealth } from '../services/healthService';
 import { RefreshCw, CheckCircle2, AlertTriangle, Radio } from 'lucide-react';
 
@@ -6,35 +6,63 @@ export default function BackendStatusBadge({ compact = false }) {
   const [status, setStatus] = useState('checking'); // 'checking' | 'connected' | 'error'
   const [message, setMessage] = useState('');
   const [isRetrying, setIsRetrying] = useState(false);
+  
+  // Track active AbortController to cancel previous in-flight requests
+  const activeControllerRef = useRef(null);
 
   const verifyConnection = async () => {
+    // 1. Cancel any active in-flight request to avoid duplicate concurrent calls
+    if (activeControllerRef.current) {
+      activeControllerRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    activeControllerRef.current = controller;
+
     setStatus('checking');
     setIsRetrying(true);
     
-    const result = await checkBackendHealth();
-    
-    if (result.connected && result.data?.success) {
-      setStatus('connected');
-      setMessage(result.data.message);
-    } else {
-      setStatus('error');
-      setMessage(result.error || 'Server unreachable on port 5000');
-    }
+    try {
+      const result = await checkBackendHealth({ signal: controller.signal });
+      
+      // If this request was cancelled, do nothing (a newer request took over or component unmounted)
+      if (result.isCancelled) return;
 
-    setIsRetrying(false);
+      if (result.connected && result.data?.success) {
+        setStatus('connected');
+        setMessage(result.data.message || 'Tekmira AI backend is running');
+      } else {
+        setStatus('error');
+        setMessage(result.error || 'Server unreachable on port 5000');
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError' && err.name !== 'CanceledError') {
+        setStatus('error');
+        setMessage('Connection verification failed');
+      }
+    } finally {
+      setIsRetrying(false);
+    }
   };
 
   useEffect(() => {
     verifyConnection();
+
+    // Cleanup: cancel pending request when component unmounts
+    return () => {
+      if (activeControllerRef.current) {
+        activeControllerRef.current.abort();
+      }
+    };
   }, []);
 
   if (compact) {
     return (
       <div className="flex items-center gap-2">
         {status === 'checking' && (
-          <span className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full border border-amber-200">
+          <span className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
             <Radio className="w-3 h-3 animate-spin" />
-            <span className="font-medium">Connecting...</span>
+            <span className="font-medium text-[11px]">Connecting...</span>
           </span>
         )}
         {status === 'connected' && (
@@ -50,15 +78,15 @@ export default function BackendStatusBadge({ compact = false }) {
           <div className="flex items-center gap-1.5">
             <span 
               title={message}
-              className="flex items-center gap-1 text-xs text-coral-600 bg-coral-50 px-2 py-1 rounded-full border border-coral-200 font-medium"
+              className="flex items-center gap-1 text-xs text-coral-600 bg-coral-50 px-2.5 py-1 rounded-full border border-coral-200 font-medium"
             >
               <AlertTriangle className="w-3 h-3" />
               <span className="text-[11px]">Offline</span>
             </span>
             <button
               onClick={verifyConnection}
-              disabled={isRetrying}
-              className="p-1 text-slate-400 hover:text-navy-900 rounded transition-colors"
+              disabled={isRetrying || status === 'checking'}
+              className="p-1 text-slate-400 hover:text-navy-900 disabled:opacity-50 rounded transition-colors"
               title="Retry connection"
             >
               <RefreshCw className={`w-3 h-3 ${isRetrying ? 'animate-spin text-coral-500' : ''}`} />
@@ -69,9 +97,9 @@ export default function BackendStatusBadge({ compact = false }) {
     );
   }
 
-  // Full Box View (ideal for Sidebar or Dashboard)
+  // Full Box View (for Sidebar or Dashboard)
   return (
-    <div className="p-3 rounded-xl border transition-all duration-200 bg-white">
+    <div className="p-3 rounded-xl border border-slate-200 transition-all duration-200 bg-white">
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-[11px] font-bold text-navy-900 uppercase tracking-wider flex items-center gap-1.5">
           <Radio className="w-3 h-3 text-coral-500" />
@@ -98,25 +126,27 @@ export default function BackendStatusBadge({ compact = false }) {
         )}
         {status === 'connected' && (
           <div>
-            <p className="text-emerald-700 font-medium text-[11px] flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3 shrink-0" />
-              <span>{message}</span>
+            <p className="text-emerald-700 font-medium flex items-center gap-1 text-[11px]">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Service Healthy (200 OK)</span>
             </p>
+            <p className="text-[10px] text-slate-400 mt-0.5 truncate">{message}</p>
           </div>
         )}
         {status === 'error' && (
-          <div className="space-y-1.5">
-            <p className="text-coral-600 font-medium text-[11px] flex items-center gap-1">
-              <AlertTriangle className="w-3 h-3 shrink-0" />
-              <span>{message}</span>
+          <div>
+            <p className="text-coral-600 font-medium flex items-center gap-1 text-[11px]">
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span>Backend Unreachable</span>
             </p>
+            <p className="text-[10px] text-slate-500 mt-0.5">{message}</p>
             <button
               onClick={verifyConnection}
-              disabled={isRetrying}
-              className="text-[10px] font-bold text-navy-900 hover:text-coral-500 underline flex items-center gap-1"
+              disabled={isRetrying || status === 'checking'}
+              className="mt-2 text-[10px] text-coral-600 hover:text-coral-700 font-semibold flex items-center gap-1 disabled:opacity-50"
             >
-              <RefreshCw className={`w-2.5 h-2.5 ${isRetrying ? 'animate-spin' : ''}`} />
-              <span>Reconnect Now</span>
+              <RefreshCw className={`w-3 h-3 ${isRetrying ? 'animate-spin' : ''}`} />
+              <span>Retry Connection</span>
             </button>
           </div>
         )}

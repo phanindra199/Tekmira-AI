@@ -151,3 +151,134 @@ $$R = 0.40 \times S_{\text{match}} + 0.35 \times E_{\text{code}} + 0.15 \times D
 - **No Style Clashes & Scoped Boundaries:** Utility classes are atomic and local. Editing an element never accidentally breaks styling on other unrelated pages.
 - **Minimal Production Bundle Size:** Tailwind's Purge/JIT engine scans source files and extracts only the exact utility classes used, generating a minified CSS bundle (~29 kB for Tekmira AI) regardless of how large the application becomes.
 - **Design System Consistency:** Colors (`#10223D`, `#FF806F`), spacing, typography, and breakpoints are centralized in `tailwind.config.js`, ensuring design consistency across all developer contributions.
+
+---
+
+## 7. JavaScript Core Foundations & Async Networking (Day 3)
+
+### 7.1 JavaScript Hoisting
+- **Simple Explanation:** Hoisting is JavaScript's default behavior of moving variable and function declarations to the top of their containing scope during the memory compilation phase before any code is executed.
+- **Key Difference:**
+  - `var` declarations are hoisted and initialized to `undefined`.
+  - `let` and `const` declarations are hoisted into a **Temporal Dead Zone (TDZ)** and cannot be accessed before their declaration line (throwing a `ReferenceError`).
+  - Function declarations (`function verify() {}`) are hoisted with their entire definition, meaning they can be called before they appear in code.
+  - Function expressions (`const verify = () => {}`) are hoisted like variables (`const`), remaining uninitialized in TDZ.
+- **Tiny Example:**
+  ```javascript
+  console.log(score); // undefined (var hoisted)
+  var score = 85;
+
+  console.log(candidate); // ReferenceError: Cannot access 'candidate' before initialization
+  const candidate = "Alex";
+  ```
+- **Where it appears in Tekmira AI:** In our ES Module architecture (`server/src/app.js` and `client/src/services/apiClient.js`), we strictly use `const` and `let` to prevent accidental `undefined` leaks and enforce predictable initialization orders.
+- **Viva Voce Question:** *"Why does `let` throw a ReferenceError when accessed before declaration if it is hoisted?"*
+  - **Answer:** *"Because ECMAScript places `let` and `const` variables into the Temporal Dead Zone (TDZ) from the start of the block until the evaluation reaches the declaration statement. Accessing them inside TDZ is prohibited to prevent hidden bugs caused by accessing uninitialized state."*
+- **Practice Exercise:** Predict the output:
+  ```javascript
+  function check() {
+    console.log(a);
+    var a = 10;
+    console.log(a);
+  }
+  // Output: undefined, then 10
+  ```
+
+---
+
+### 7.2 JavaScript Closures
+- **Simple Explanation:** A closure is the combination of a function bundled together with references to its surrounding state (lexical environment). In simple terms: an inner function always retains access to the variables of its outer function even after the outer function has finished executing and returned.
+- **Tiny Example:**
+  ```javascript
+  function createCounter(initial) {
+    let count = initial; // private variable enclosed
+    return function increment() {
+      count += 1;
+      return count;
+    };
+  }
+  const counter = createCounter(0);
+  console.log(counter()); // 1
+  console.log(counter()); // 2
+  ```
+- **Where it appears in Tekmira AI:**
+  1. **Debounced Search:** On the dashboard skills tab (`setSkillSearch`), a closure retains the active timer ID across keystrokes.
+  2. **Interceptors:** Axios request interceptors enclose the active token getter without exposing credentials to the global `window` scope.
+- **Viva Voce Question:** *"How do closures enable data encapsulation in JavaScript without using classes?"*
+  - **Answer:** *"Variables declared inside an outer factory function are not accessible from the global scope. By returning inner methods that reference those variables, those variables remain private to the closure, creating secure encapsulated state."*
+- **Practice Exercise:** Implement a rate-limiter closure that allows a function to run only once every `N` milliseconds.
+
+---
+
+### 7.3 The JavaScript Event Loop, Call Stack & Queues
+- **Simple Explanation:** JavaScript is single-threaded; it can only execute one command at a time on its **Call Stack**. To handle long-running operations (such as HTTP requests or file I/O) without freezing the UI, the runtime uses the **Event Loop**.
+- **Execution Order:**
+  1. **Call Stack:** Executes synchronous code line by line.
+  2. **Web APIs / Node APIs:** Handles background timers (`setTimeout`), network calls (`fetch`/`axios`), and file I/O.
+  3. **Microtask Queue (High Priority):** Holds Promise callbacks (`.then()`, `await` continuations, `queueMicrotask`). Processed *immediately* after the call stack empties and before any Macrotask.
+  4. **Macrotask Queue (Low Priority):** Holds `setTimeout`, `setInterval`, `setImmediate`, and I/O events.
+- **Tiny Example:**
+  ```javascript
+  console.log('1: Sync');
+  setTimeout(() => console.log('2: Macrotask (Timeout)'), 0);
+  Promise.resolve().then(() => console.log('3: Microtask (Promise)'));
+  console.log('4: Sync');
+  // Output: 1, 4, 3, 2
+  ```
+- **Where it appears in Tekmira AI:** When `checkBackendHealth()` fires in `<BackendStatusBadge />`, Axios sends the HTTP request through browser Web APIs. React continues rendering the "Connecting..." UI synchronously. When the backend responds, the Axios promise resolution runs as a Microtask, updating React state without lagging UI interactions.
+- **Viva Voce Question:** *"Between a resolved Promise `.then()` callback and a `setTimeout(fn, 0)`, which runs first and why?"*
+  - **Answer:** *"The Promise callback runs first because it enters the Microtask Queue. The Event Loop prioritizes and exhausts all microtasks before picking the next task from the Macrotask Queue."*
+
+---
+
+### 7.4 Promises versus Callbacks
+- **Simple Explanation:**
+  - **Callback:** A function passed as an argument into another function to be invoked when an asynchronous operation finishes. When multiple async operations depend on each other, callbacks lead to deeply nested, unmaintainable code known as **Callback Hell** or the "Pyramid of Doom", and suffer from **Inversion of Control** (you trust a third party to call your callback correctly).
+  - **Promise:** An object representing the eventual completion (or failure) of an asynchronous operation and its resulting value. A Promise exists in one of three mutually exclusive states:
+    1. `Pending`: Initial state, neither fulfilled nor rejected.
+    2. `Fulfilled`: Operation completed successfully (`resolve(data)`).
+    3. `Rejected`: Operation failed (`reject(error)`).
+- **Tiny Example:**
+  ```javascript
+  // Callback approach:
+  getUser(userId, (err, user) => {
+    if (err) return handleError(err);
+    getRepos(user.github, (err, repos) => { ... });
+  });
+
+  // Promise approach:
+  getUser(userId)
+    .then(user => getRepos(user.github))
+    .then(repos => console.log(repos))
+    .catch(err => handleError(err));
+  ```
+- **Where it appears in Tekmira AI:** Every API endpoint service (`apiClient.js`, `healthService.js`) returns standard Promises, allowing components to consume data using either chained `.then()` or `async/await`.
+- **Viva Voce Question:** *"What is 'Inversion of Control' in the context of callbacks, and how do Promises solve it?"*
+  - **Answer:** *"With callbacks, we pass our execution logic into a third-party function and have no control over whether, when, or how many times it will be executed. Promises invert this control back to our code: a Promise guarantees it will resolve or reject at most once, and its resolution is immutable and verifiable."*
+
+---
+
+### 7.5 Async/Await, Error Handling & Concurrency
+- **Simple Explanation:** `async/await` is modern syntactic sugar built on top of JavaScript Promises. It allows asynchronous, non-blocking code to be written and read sequentially like synchronous code, using standard `try/catch` blocks for clean error handling.
+- **Concurrency: Sequential vs Parallel (`Promise.all`):**
+  - **Sequential (Slow):**
+    ```javascript
+    const resume = await parseResume(); // takes 2s
+    const repos = await fetchRepos();   // takes 3s
+    // Total time = 5 seconds
+    ```
+  - **Parallel with `Promise.all` (Fast):**
+    ```javascript
+    const [resume, repos] = await Promise.all([
+      parseResume(),
+      fetchRepos()
+    ]);
+    // Total time = max(2s, 3s) = 3 seconds
+    ```
+- **Where it appears in Tekmira AI:**
+  1. In `server/src/controllers/healthController.js` and `client/src/services/healthService.js`.
+  2. In the candidate verification pipeline (Phase 2), where resume claims extraction and GitHub repository metadata mining run concurrently using `Promise.all` to cut report generation latency in half.
+  3. Safe request cancellation with `AbortController` in `DashboardPage.jsx` and `BackendStatusBadge.jsx`.
+- **Viva Voce Question:** *"What happens if one Promise in `Promise.all()` rejects? What alternative can you use if you want all independent operations to settle regardless of failures?"*
+  - **Answer:** *"If any promise in `Promise.all()` rejects, the entire `Promise.all()` immediately rejects (Fail-Fast behavior). If we want all operations to complete regardless of individual errors, we use `Promise.allSettled()`, which returns an array of objects detailing the status (`fulfilled` or `rejected`) and value/reason for each promise."*
+
