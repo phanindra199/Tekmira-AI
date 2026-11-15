@@ -598,3 +598,51 @@ Tekmira AI strictly enforces standardized HTTP status codes:
 
 
 
+
+---
+
+## 14. Section 14: Secure File Uploads, PDF Stream Parsing & Magic Bytes (Day 10)
+
+### 14.1 Why File Extensions Alone Do Not Prove a File is Safe
+- **The Vulnerability (Extension & Header Spoofing):**
+  - An attacker or candidate can rename an arbitrary binary (e.g. `malicious.exe`, `script.sh`, or a malicious ZIP file) to `resume.pdf`.
+  - A simple check like `file.originalname.endsWith('.pdf')` or inspecting the client-supplied `Content-Type: application/pdf` header is trivial to bypass using `curl -F "resume=@evil.exe;type=application/pdf"`.
+- **The Defense: Magic Bytes (File Signatures):**
+  - Legitimate binary formats begin with standard leading byte sequences (file signatures) placed by their specifications.
+  - An authentic PDF document **MUST** start with `%PDF-` (`0x25 0x50 0x44 0x46 0x2D` in ASCII/hex), denoting the standard PDF header structure across versions 1.0 through 2.0.
+  - Tekmira AI executes a mandatory pre-flight check on `buffer.slice(0, 5).toString('ascii') === '%PDF-'`. If missing, the request is immediately rejected with HTTP 400 (`Invalid file signature`).
+
+### 14.2 Multer Memory Storage vs Disk Storage
+- **Memory Storage (`multer.memoryStorage()`):**
+  - Stores incoming files as Node.js in-memory `Buffer` objects in RAM.
+  - **Security Advantage:** Eliminates saving unvetted, potentially malicious bytes to the server filesystem. Prevents disk space exhaustion, orphaned temporary file accumulation on server crashes, and path traversal writes.
+  - **Memory Safeguard:** Safe for strict small-file thresholds (e.g. Tekmira AI's 5MB limit).
+- **Disk Storage (`multer.diskStorage()`):**
+  - Streams incoming bytes directly to temporary disk files.
+  - Required for large media files (>50MB). However, requires strict cleanup routines (`fs.unlink`), isolated permissions, random non-executable directory paths, and robust OS garbage collection.
+
+### 14.3 PDF Text Stream Parsing vs Scanned Raster Bitmaps & Zero-OCR Honesty
+- **Text Streams in PDFs:**
+  - Modern PDFs exported from Word, Google Docs, or LaTeX store text content inside standard content streams bounded by `BT` (Begin Text) and `ET` (End Text) operators, using `Tj` or `TJ` operators with mapped character font dictionaries.
+  - `pdf-parse` extracts these digital streams directly into clean Unicode characters.
+- **Scanned Images & Photographs:**
+  - A scanned resume is simply a flat bitmap image (JPEG or PNG) encapsulated within a PDF page container (`/XObject /Subtype /Image`). There are **no text operators** in the file.
+  - Traditional stream parsers extract 0 bytes of text from scanned PDFs.
+  - **Tekmira AI's Zero-Hallucination Policy:** Rather than pretending OCR exists or allowing an LLM to guess what might be on an empty page, Tekmira AI inspects the non-whitespace character count (`nonWhitespaceCount < 20`). If unreadable, it flags `isScanned: true` and issues an honest, transparent notice:
+    > *"No readable text stream detected in this PDF. It appears to be an image-based or scanned document. Tekmira AI requires digital, selectable text PDFs; OCR is not supported."*
+
+### 14.4 Cryptographic SHA-256 Fingerprinting
+- **Audit Provenance & Tamper-Evident Records:**
+  - Every uploaded resume is digested using SHA-256: `crypto.createHash('sha256').update(buffer).digest('hex')`.
+  - The resulting 64-character hexadecimal digest is stored in MongoDB `ResumeDocument.sha256Hash`.
+  - This guarantees immutable evidence provenance: if a candidate disputes an evaluation or alters their resume later, the SHA-256 hash mathematically proves which exact document was evaluated.
+
+---
+
+### 14.5 Viva Voce Questions & Technical Answers
+1. **Viva Question:** *"Why is checking `req.file.mimetype === 'application/pdf'` insufficient for secure file uploads?"*
+   - **Answer:** *"The MIME type is sent by the client in the `Content-Type` multipart header. Any attacker can forge this header using curl or Postman to upload an executable binary while claiming it is `application/pdf`. True security requires inspecting the actual binary payload for Magic Bytes (`%PDF-`) at the start of the file buffer."*
+2. **Viva Question:** *"Why does Tekmira AI use `multer.memoryStorage()` instead of `diskStorage()` for resume uploads?"*
+   - **Answer:** *"Because resumes have a capped 5MB limit, keeping them in RAM buffer allows immediate magic-byte validation and parsing without writing untrusted binaries to the host filesystem. This eliminates orphaned temporary files on server restarts, prevents path traversal disk writes, and avoids file I/O bottlenecks."*
+3. **Viva Question:** *"What happens when a candidate uploads a scanned photograph of a resume saved as a PDF?"*
+   - **Answer:** *"PDF text stream parsers only extract text operators (`Tj`/`TJ`). A scanned document contains only a raster bitmap with zero text streams. Tekmira AI detects this when the character count is below 20, flags `isScanned: true`, and returns a clear, honest HTTP 422 error notifying the candidate that OCR for scanned images is not supported and digital text is required."*

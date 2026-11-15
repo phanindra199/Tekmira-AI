@@ -27,6 +27,31 @@ EDUCATION:
 
 export const aiService = {
   /**
+   * Upload and extract text stream from a candidate PDF resume.
+   *
+   * @param {File} file - PDF file object from browser file input
+   * @param {object} [options] - { autoAnalyze?: boolean, allowScanned?: boolean }
+   * @returns {Promise<object>} Parsed PDF metadata and text stream
+   */
+  async uploadResumePdf(file, options = {}) {
+    const formData = new FormData();
+    formData.append('resume', file);
+
+    const queryParams = new URLSearchParams();
+    if (options.autoAnalyze) queryParams.append('autoAnalyze', 'true');
+    if (options.allowScanned) queryParams.append('allowScanned', 'true');
+
+    const url = `/analysis/resumes/upload${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    
+    const response = await apiClient.post(url, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  },
+
+  /**
    * Analyze candidate resume text via backend Gemini API service.
    *
    * @param {string} resumeText

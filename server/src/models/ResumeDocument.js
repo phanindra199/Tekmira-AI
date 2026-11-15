@@ -63,6 +63,24 @@ const ResumeDocumentSchema = new mongoose.Schema({
     type: String, 
     required: [true, 'Extracted resume text is required'] 
   },
+  pageCount: {
+    type: Number,
+    default: 1,
+    min: 1
+  },
+  wordCount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  sha256Hash: {
+    type: String,
+    trim: true
+  },
+  isScanned: {
+    type: Boolean,
+    default: false
+  },
   extractedClaims: {
     skills: [SkillClaimSchema],
     projects: [ProjectClaimSchema],

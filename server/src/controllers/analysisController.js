@@ -8,6 +8,27 @@ import { AnalysisReportService } from '../services/analysisReportService.js';
  */
 
 // --- Resume Document Handlers ---
+export const uploadResumePdf = async (req, res, next) => {
+  try {
+    const userId = req.user?.id || req.headers['x-user-id'] || req.body?.userId;
+    const autoAnalyze = req.query?.autoAnalyze === 'true' || req.body?.autoAnalyze === 'true';
+    const allowScanned = req.query?.allowScanned === 'true' || req.body?.allowScanned === 'true';
+
+    const result = await ResumeService.processAndStorePdf(req.file, userId, {
+      autoAnalyze,
+      allowScanned
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Resume PDF uploaded and parsed successfully',
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const createResumeRecord = async (req, res, next) => {
   try {
     const resume = await ResumeService.createResume(req.body);
@@ -89,6 +110,7 @@ export const getAnalysisReport = async (req, res, next) => {
 };
 
 export default {
+  uploadResumePdf,
   createResumeRecord,
   getResumeRecord,
   saveRepositorySnapshot,

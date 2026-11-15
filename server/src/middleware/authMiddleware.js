@@ -41,6 +41,29 @@ export const authenticate = (req, res, next) => {
 };
 
 /**
+ * Optional Authentication Middleware
+ * Attaches req.user if a valid Bearer token is supplied, but does not block unauthenticated requests.
+ */
+export const optionalAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  if (!authHeader) {
+    return next();
+  }
+
+  try {
+    const parts = authHeader.split(' ');
+    if (parts.length === 2 && parts[0] === 'Bearer') {
+      const decodedUser = AuthService.verifyToken(parts[1]);
+      req.user = decodedUser;
+    }
+  } catch (err) {
+    // Silently continue as unauthenticated guest
+  }
+
+  next();
+};
+
+/**
  * Role-Based Access Control (RBAC) Authorization Middleware
  * @param  {...string} allowedRoles - e.g. 'STUDENT', 'RECRUITER', 'ADMIN'
  */
@@ -58,4 +81,4 @@ export const authorizeRoles = (...allowedRoles) => {
   };
 };
 
-export default { authenticate, authorizeRoles };
+export default { authenticate, authorizeRoles, optionalAuth };
