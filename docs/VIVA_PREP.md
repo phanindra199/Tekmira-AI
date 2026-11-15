@@ -373,3 +373,46 @@ ORDER BY avgScore DESC
 LIMIT 5;
 ```
 
+---
+
+## 9. MongoDB Document Database, BSON & Mongoose Modeling (Day 5)
+
+### 9.1 Core Document Concepts: Collections, Documents & BSON
+- **Collection:** Analogous to a SQL table, but schema-flexible. In Tekmira AI: `resume_documents`, `repository_snapshots`, `skill_analysis_reports`.
+- **Document:** A JSON-like record stored as **BSON (Binary JSON)**. Documents support nested objects and arrays of arbitrary depth.
+- **Why BSON instead of standard JSON?**
+  1. **Data Type Preservation:** BSON supports explicit date formats (`Date`), binary data, 64-bit integers, and unique 12-byte `ObjectId` tokens, which pure JSON lacks.
+  2. **Fast Traversal & Indexing:** BSON includes byte-length prefixes for fields, enabling MongoDB engines to seek directly to specific nested properties without parsing the entire document string.
+
+---
+
+### 9.2 Embedding versus Referencing Strategy
+A fundamental data modeling decision in MongoDB is choosing when to **embed** subdocuments versus when to **reference** external documents by ID:
+
+| Decision Dimension | **Embedded (Denormalized)** | **Referenced (Normalized)** |
+| :--- | :--- | :--- |
+| **Relationship** | 1-to-Few or 1-to-Bounded (e.g. 5–20 skills in a resume, 10 commits per repo) | 1-to-Many, Many-to-Many, or Unbounded growth (e.g. 10,000 users, 5,000 job descriptions) |
+| **Read Pattern** | Data is almost always retrieved together in one query (e.g. loading a resume with its claimed skills) | Data is frequently queried independently or shared across multiple entities |
+| **Atomic Updates** | Updating the parent updates embedded children atomically in a single disk write | Requires multiple writes or database transactions |
+| **Tekmira AI Usage** | `extractedClaims.skills`, `languages`, `authenticCommits`, `triangulationMatrix` | `userId` (pointing to PostgreSQL User UUID), `jobId` (pointing to PostgreSQL Job UUID) |
+
+---
+
+### 9.3 Mongoose Schema Design & Validation
+Mongoose provides an Object Data Modeling (ODM) layer on top of MongoDB with:
+- **Strict Schema Enforcement:** Validates data types, required fields, and regular expressions before issuing disk write commands.
+- **Enums:** Enforces strict domain rules (e.g. `verificationStatus` must be one of `['VERIFIED', 'INFLATED_CLAIM', 'UNCLAIMED_STRENGTH', 'MISSING_CRITICAL']`).
+- **Composite Unique Indexes:** `RepositorySnapshotSchema.index({ userId: 1, repoName: 1 }, { unique: true })` prevents duplicate repository records per user.
+- **Timestamps:** Automatic `createdAt` and `updatedAt` tracking.
+
+---
+
+### 9.4 Viva Voce Questions & Practice Exercises
+1. **Viva Question:** *"Why can't we store candidate resumes and GitHub commit histories in PostgreSQL along with users?"*
+   - **Answer:** *"Resumes and GitHub repository snapshots contain polymorphic, deeply nested structures with variable lengths (e.g. varying arrays of commits, languages, projects, and arbitrary AI-extracted entities). Modeling this in relational SQL requires numerous auxiliary tables with expensive multi-table JOINs on every page load. In MongoDB, an entire repository snapshot or resume AST is stored and retrieved as a single, self-contained BSON document with single-digit millisecond latency."*
+2. **Viva Question:** *"What is the 16MB document size limit in MongoDB and how does Tekmira AI respect it?"*
+   - **Answer:** *"MongoDB limits individual BSON documents to 16 megabytes to prevent memory spikes and disk thrashing. In Tekmira AI, we avoid the 'Unbounded Array Anti-Pattern' by storing summarized, authentic commits per repository rather than cloning entire Git commit trees, keeping document footprints under 50 kilobytes."*
+3. **Viva Question:** *"How does Tekmira AI maintain referential consistency across PostgreSQL and MongoDB without distributed transactions?"*
+   - **Answer:** *"PostgreSQL serves as the authoritative source of identity (the 'Anchor'). The MongoDB documents store the candidate's PostgreSQL `userId` as an indexed foreign UUID string. When a user requests their dashboard, Express coordinates queries across PostgreSQL (profile/jobs) and MongoDB (resumes/reports) asynchronously using `Promise.all`."*
+
+

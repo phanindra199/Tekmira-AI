@@ -1,12 +1,13 @@
 import { checkDatabaseHealth } from '../config/database.js';
+import { checkMongoHealth } from '../config/mongoDatabase.js';
 
 /**
  * Health Service
- * Pure business logic layer for system and database health inspection
+ * Pure business logic layer for system and polyglot database health inspection
  */
 export class HealthService {
   /**
-   * Retrieves system operational status
+   * Retrieves basic system operational status
    * @returns {Object} System health details
    */
   static getHealthInfo() {
@@ -19,11 +20,15 @@ export class HealthService {
   }
 
   /**
-   * Retrieves complete system health including database status without credentials
+   * Retrieves complete system health including polyglot database status without credentials
    * @returns {Promise<Object>} Detailed health metrics
    */
   static async getFullHealthInfo() {
-    const dbStatus = await checkDatabaseHealth();
+    const [pgStatus, mongoStatus] = await Promise.all([
+      checkDatabaseHealth(),
+      checkMongoHealth()
+    ]);
+
     return {
       message: 'Tekmira AI backend is running',
       timestamp: new Date().toISOString(),
@@ -31,8 +36,20 @@ export class HealthService {
       environment: process.env.NODE_ENV || 'development',
       database: {
         provider: 'PostgreSQL (Prisma)',
-        status: dbStatus.status,
-        connected: dbStatus.connected
+        status: pgStatus.status,
+        connected: pgStatus.connected
+      },
+      databases: {
+        relational: {
+          provider: 'PostgreSQL (Prisma)',
+          status: pgStatus.status,
+          connected: pgStatus.connected
+        },
+        document: {
+          provider: 'MongoDB (Mongoose)',
+          status: mongoStatus.status,
+          connected: mongoStatus.connected
+        }
       }
     };
   }

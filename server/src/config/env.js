@@ -14,5 +14,6 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
   databaseUrl: process.env.DATABASE_URL || '',
+  mongodbUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/tekmira_docs',
   isProduction: process.env.NODE_ENV === 'production'
 };

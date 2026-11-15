@@ -288,71 +288,45 @@ CREATE TABLE skills_taxonomy (
 );
 ```
 
-### 4.2 MongoDB Document Schemas (Planned)
+### 4.3 MongoDB Document Schemas via Mongoose (Implemented — Day 5)
 
-```javascript
-// Collection: resumes
-const ResumeSchema = {
-  _id: "ObjectId",
-  userId: "UUID",               // References PostgreSQL users.id
-  fileName: "String",           // e.g., 'resume_alex.pdf'
-  rawText: "String",            // Plain text stream extracted via pdf-parse
-  parsedSkills: [
-    {
-      name: "String",           // e.g., 'React'
-      category: "String",       // e.g., 'frontend'
-      claimedExperienceMonths: "Number"
-    }
-  ],
-  parsedProjects: [
-    {
-      title: "String",
-      techClaimed: ["String"]
-    }
-  ],
-  createdAt: "Date"
-};
+Implemented and operational in `server/src/models/`:
 
-// Collection: analysis_reports
-const AnalysisReportSchema = {
-  _id: "ObjectId",
-  userId: "UUID",
-  jobId: "UUID",
-  readinessScore: "Number",     // 0 - 100
-  triangulationMatrix: [
-    {
-      skill: "String",
-      status: "String",         // 'VERIFIED' | 'UNVERIFIED' | 'MISSING_TARGET' | 'HIDDEN_STRENGTH'
-      claimedInResume: "Boolean",
-      foundInGitHub: "Boolean",
-      requiredByJob: "Boolean",
-      evidence: {
-        repoName: "String",
-        commitCount: "Number",
-        sampleSnippet: "String"
-      },
-      explanation: "String"
-    }
-  ],
-  learningRoadmap: [
-    {
-      skill: "String",
-      action: "String"
-    }
-  ],
-  createdAt: "Date"
-};
-```
+#### 1. `ResumeDocument` (`server/src/models/ResumeDocument.js`)
+- **Collection:** `resume_documents`
+- **Fields:** `userId` (indexed UUID), `fileName`, `fileSize`, `mimeType`, `rawText`, `parserVersion`
+- **Embedded Subdocuments:**
+  - `extractedClaims.skills`: `[{ name, category, confidence, context }]`
+  - `extractedClaims.projects`: `[{ title, description, technologies, repoUrl }]`
+  - `extractedClaims.education`: `[{ degree, institution, graduationYear, score }]`
+  - `extractedClaims.experienceYears`: `Number`
+
+#### 2. `RepositorySnapshot` (`server/src/models/RepositorySnapshot.js`)
+- **Collection:** `repository_snapshots`
+- **Fields:** `userId`, `githubHandle`, `repoName`, `repoUrl`, `isFork`, `defaultBranch`, `stargazersCount`, `detectedDependencies`, `hasTestFiles`, `minedAt`
+- **Composite Unique Index:** `@@index([userId, repoName], { unique: true })`
+- **Embedded Subdocuments:**
+  - `languages`: `[{ name, bytes, percentage }]`
+  - `authenticCommits`: `[{ hash, message, committedAt, additions, deletions, verifiedAuthored }]`
+
+#### 3. `SkillAnalysisReport` (`server/src/models/SkillAnalysisReport.js`)
+- **Collection:** `skill_analysis_reports`
+- **Fields:** `userId`, `jobId`, `resumeId` (ObjectId ref), `overallReadinessScore` (0-100), `status`, `summary`, `aiModelUsed`, `reportVersion`
+- **Embedded Subdocuments:**
+  - `triangulationMatrix`: `[{ skillName, isClaimedInResume, isDemonstratedInCode, isRequiredInJob, verificationStatus, evidence }]`
+  - `remediationPlan`: `[{ skill, gapSeverity, recommendation, suggestedProject, suggestedResources }]`
+  - `metrics`: `{ totalSkillsEvaluated, verifiedCount, inflatedCount, missingCriticalCount, unclaimedStrengthsCount }`
 
 ---
 
 ## 5. Service Responsibilities: Implemented vs. Planned
 
-| Service Class / Module | Implementation Status | Scope & Responsibilities |
-| :--- | :--- | :--- |
-| **`HealthService`** | **IMPLEMENTED** | Returns system operational state, timestamp, uptime, and environment identifier. |
-| **`AuthService`** | *PLANNED* | Salted password hashing via `bcrypt`, credential verification, and JWT generation/validation. |
-| **`ResumeParserService`** | *PLANNED* | Text extraction from PDF streams and invoking Gemini API with structured JSON output prompts. |
-| **`GitHubMiningService`** | *PLANNED* | Interacting with GitHub API, filtering authentic author commits, and inspecting dependency manifests. |
-| **`TriangulationService`**| *PLANNED* | Evaluating the three-way intersection formula and generating the Placement Readiness Index. |
-| **`ReportService`** | *PLANNED* | Assembling the explainable evaluation matrix and persisting final payloads to MongoDB. |
+| Service Class / Module | File Path | Implementation Status | Scope & Responsibilities |
+| :--- | :--- | :--- | :--- |
+| **`HealthService`** | `server/src/services/healthService.js` | **IMPLEMENTED** | Returns system operational state, uptime, environment, and polyglot database connectivity metrics. |
+| **`JobApplicationService`** | `server/src/services/jobApplicationService.js` | **IMPLEMENTED** | Relational queries joining PostgreSQL `users`, `job_descriptions`, and `job_applications` with raw SQL reference logic. |
+| **`ResumeService`** | `server/src/services/resumeService.js` | **IMPLEMENTED** | CRUD operations for unstructured candidate resume records in MongoDB with candidate ownership checks. |
+| **`RepositoryService`** | `server/src/services/repositoryService.js` | **IMPLEMENTED** | Upsert and retrieval operations for mined GitHub repository snapshots and authentic commit lists in MongoDB. |
+| **`AnalysisReportService`** | `server/src/services/analysisReportService.js` | **IMPLEMENTED** | Stores, updates, and queries complete 3-way skill triangulation analysis reports in MongoDB. |
+| **`AuthService`** | `server/src/services/authService.js` | *PLANNED (Day 6)* | Salted password hashing via `bcrypt`, credential verification, and JWT generation/validation. |
+| **`GeminiTriangulationService`**| `server/src/services/triangulationService.js` | *PLANNED (Day 8)* | Orchestrating Gemini 1.5 Pro to synthesize resume claims against GitHub code evidence and target JD. |
