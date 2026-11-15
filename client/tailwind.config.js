@@ -8,20 +8,32 @@ export default {
     extend: {
       colors: {
         navy: {
-          950: '#060B18',
-          900: '#0A142F', // Primary deep navy
-          800: '#12224A',
-          700: '#1E3A8A',
-          600: '#2563EB',
-          100: '#E0E7FF',
-          50: '#F0F4FF'
+          DEFAULT: '#10223D', // Primary brand navy
+          950: '#0A1526',
+          900: '#10223D',     // Exact requested: #10223D
+          800: '#182E50',
+          700: '#203753',     // Secondary navy: #203753
+          600: '#2B4A70',
+          500: '#3A6293',
+          100: '#E2E8F0',
+          50: '#F0F4F8',
         },
         coral: {
-          500: '#FF6B6B', // Signature coral accent
-          600: '#FA5252',
-          700: '#E03131',
-          50: '#FFF5F5',
-          light: '#FFE3E3'
+          DEFAULT: '#FF806F', // Restrained Coral: #FF806F
+          500: '#FF806F',
+          600: '#FA6B59',
+          700: '#E55644',
+          50: '#FFF6F5',
+          light: '#FFE5E1',
+        },
+        tekmira: {
+          navy: '#10223D',
+          secondaryNavy: '#203753',
+          white: '#FFFFFF',
+          light: '#F7F9FC',
+          coral: '#FF806F',
+          text: '#172033',
+          muted: '#64748B',
         }
       },
       fontFamily: {

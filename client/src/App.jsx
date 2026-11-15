@@ -10,6 +10,9 @@ import ResumeAnalysisPage from './pages/ResumeAnalysisPage';
 import GitHubAnalysisPage from './pages/GitHubAnalysisPage';
 import JobMatchPage from './pages/JobMatchPage';
 import AnalysisReportPage from './pages/AnalysisReportPage';
+import SkillEvidencePage from './pages/SkillEvidencePage';
+import InterviewPrepPage from './pages/InterviewPrepPage';
+import SettingsPage from './pages/SettingsPage';
 
 export default function App() {
   return (
@@ -21,12 +24,17 @@ export default function App() {
 
       {/* Main SaaS App Pages */}
       <Route path="/dashboard" element={<DashboardPage />} />
+      <Route path="/overview" element={<Navigate to="/dashboard" replace />} />
       <Route path="/resume-analysis" element={<ResumeAnalysisPage />} />
       <Route path="/github-analysis" element={<GitHubAnalysisPage />} />
       <Route path="/job-match" element={<JobMatchPage />} />
+      <Route path="/skill-evidence" element={<SkillEvidencePage />} />
+      <Route path="/interview-prep" element={<InterviewPrepPage />} />
       <Route path="/analysis-report" element={<AnalysisReportPage />} />
+      <Route path="/reports" element={<AnalysisReportPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
 
-      {/* Catch-all redirect to Home */}
+      {/* Catch-all 404 redirect to Home */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

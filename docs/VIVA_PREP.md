@@ -114,3 +114,40 @@ $$R = 0.40 \times S_{\text{match}} + 0.35 \times E_{\text{code}} + 0.15 \times D
 
 ### Q: Why do environment variables in Vite require the `VITE_` prefix?
 **Answer:** For **security against accidental credential leakage**. By default, Vite prevents server secrets (like database passwords or private API keys) from accidentally leaking into the client-side JavaScript bundle downloaded by user browsers. Only environment variables explicitly prefixed with `VITE_` (e.g. `VITE_API_BASE_URL`) are embedded into the client code during build time and made accessible through `import.meta.env`.
+
+---
+
+## 6. React Component Architecture, Hooks & Design System (Day 2)
+
+### Q: Why does React favor Component Composition over Class Inheritance?
+**Answer:** In React, UI is built by composing smaller, single-responsibility components together rather than creating deep inheritance hierarchies:
+- **Flexibility:** A `<Card>` can host any arbitrary content via `{children}` or subcomponents (`CardHeader`, `CardTitle`, `CardContent`), rather than creating specialized subclasses like `DashboardMetricCard extends BaseCard`.
+- **Reusability:** Small atomic components (`Button`, `Badge`, `Input`) can be assembled in various configurations without altering their internal logic.
+- **Maintainability:** Refactoring an individual component does not break distant child classes, preventing fragile base class problems.
+
+---
+
+### Q: Explain `useState`, `useEffect`, and the purpose of the dependency array and cleanup function.
+**Answer:**
+1. **`useState`:** Declares a state variable that React tracks between renders. When updated via its setter function (`setState`), React schedules a re-render of the component and updates the DOM where state changed.
+2. **`useEffect`:** Performs side effects in functional components (e.g., API requests, subscriptions, DOM listeners, timers). It runs after the render is committed to screen.
+3. **Dependency Array (`[]`):** Controls when the effect executes:
+   - *Omitted:* Runs after every single render.
+   - *Empty array `[]`:* Runs exactly once after the initial mount (equivalent to `componentDidMount`).
+   - *Array with values `[dep1, dep2]`:* Runs on mount and re-runs only if any dependency value changes between renders.
+4. **Cleanup Function (`return () => { ... }`):** Returned by the effect callback. React executes it right before the component unmounts and before re-running the effect on dependency change. This prevents memory leaks, dangling network requests (using `AbortController`), or outdated state updates on unmounted components.
+
+---
+
+### Q: What is Client-Side Routing (React Router) vs Traditional Server-Side Routing?
+**Answer:**
+- **Traditional Server-Side Routing:** When the user clicks an `<a>` link, the browser makes a new HTTP GET request to the web server, which generates and returns a complete HTML document. The browser screen flashes blank, discards all in-memory JavaScript state, and re-parses all CSS and scripts.
+- **Client-Side Routing (Single Page Application):** React Router intercepts link clicks via HTML5 History API (`pushState` / `replaceState`). It updates the URL in the browser address bar without sending a network request to the server, and conditionally mounts/unmounts React components in the DOM. This provides instantaneous page transitions and preserves global state across routes.
+
+---
+
+### Q: Why use Tailwind CSS utility classes instead of traditional CSS files or CSS-in-JS?
+**Answer:**
+- **No Style Clashes & Scoped Boundaries:** Utility classes are atomic and local. Editing an element never accidentally breaks styling on other unrelated pages.
+- **Minimal Production Bundle Size:** Tailwind's Purge/JIT engine scans source files and extracts only the exact utility classes used, generating a minified CSS bundle (~29 kB for Tekmira AI) regardless of how large the application becomes.
+- **Design System Consistency:** Colors (`#10223D`, `#FF806F`), spacing, typography, and breakpoints are centralized in `tailwind.config.js`, ensuring design consistency across all developer contributions.

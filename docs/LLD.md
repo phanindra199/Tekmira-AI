@@ -93,14 +93,27 @@ tekmira-ai/
 
 ## 2. Component Responsibilities (Implemented)
 
+### 2.1 Design System UI Library (`client/src/components/common/`)
 | Component | File Path | Props / Inputs | Responsibility |
 | :--- | :--- | :--- | :--- |
-| **`PageLayout`** | `client/src/components/PageLayout.jsx` | `children`, `title`, `description`, `withSidebar`, `actionButton`, `breadcrumbs` | Provides master shell with responsive Navbar, optional Sidebar, main content container, and Footer. |
-| **`Navbar`** | `client/src/components/Navbar.jsx` | None | Top navigation bar with active route highlighting, mobile drawer toggle, and live `BackendStatusBadge`. |
-| **`Sidebar`** | `client/src/components/Sidebar.jsx` | None | Persistent side navigation for dashboard views with step tags (`Step 1`, `Step 2`, `Step 3`, `Result`) and full backend status widget. |
-| **`DashboardCard`** | `client/src/components/DashboardCard.jsx` | `title`, `value`, `subtitle`, `icon`, `badgeText`, `badgeType`, `actionLink`, `actionText` | Standardized SaaS card for metrics, status tags, and action shortcuts. |
-| **`BackendStatusBadge`** | `client/src/components/BackendStatusBadge.jsx` | `compact` (boolean) | Reactive widget that triggers `checkBackendHealth()`, managing loading (`checking`), success (`connected`), and failure (`error`) with retry logic. |
-| **`Footer`** | `client/src/components/Footer.jsx` | None | Global footer displaying project branding, stack badges, and capstone copyright. |
+| **`Button`** | `client/src/components/common/Button.jsx` | `variant` (primary, secondary, outline, ghost, coral), `size`, `loading`, `disabled`, `children` | Accessible, consistent button with keyboard focus and loading spinner. |
+| **`Card`** | `client/src/components/common/Card.jsx` | `children`, subcomponents: `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter` | Modular card container for surfaces, metrics, and data sections. |
+| **`Input`** | `client/src/components/common/Input.jsx` | `label`, `error`, `helperText`, `leftIcon`, `rightIcon`, standard HTML input props | Form input with state validation, clear label association, and error feedback. |
+| **`Badge`** | `client/src/components/common/Badge.jsx` | `variant` (neutral, success, warning, coral, navy, outline), `size`, `children` | Status pills for categories, verification states, and role tags. |
+| **`PageHeader`** | `client/src/components/common/PageHeader.jsx` | `title`, `description`, `breadcrumbs`, `actions` | Standard page header with title, subtitle, and contextual action buttons. |
+| **`LoadingIndicator`** | `client/src/components/common/LoadingIndicator.jsx` | `size`, `text`, `centered` | Accessible ARIA-compliant loading spinner and feedback. |
+| **`ErrorMessage`** | `client/src/components/common/ErrorMessage.jsx` | `title`, `message`, `onRetry` | Alert notification banner with retry callback action. |
+| **`EmptyState`** | `client/src/components/common/EmptyState.jsx` | `icon`, `title`, `description`, `actionLabel`, `onAction` | Zero-data placeholder guiding candidate to upload or connect evidence. |
+
+### 2.2 Shell & Navigation Components
+| Component | File Path | Props / Inputs | Responsibility |
+| :--- | :--- | :--- | :--- |
+| **`MainLayout`** | `client/src/components/MainLayout.jsx` | `children`, `showSidebar` (default `true`) | Master application shell coordinating mobile sidebar drawer state, Top Navbar, and Footer. |
+| **`PageLayout`** | `client/src/components/PageLayout.jsx` | Forwarding props to `MainLayout` | Backward-compatibility wrapper for pages specifying layouts. |
+| **`Navbar`** | `client/src/components/Navbar.jsx` | `onToggleSidebar`, `isSidebarOpen` | Top navigation bar with branding, mobile drawer hamburger, profile menu dropdown, and `BackendStatusBadge`. |
+| **`Sidebar`** | `client/src/components/Sidebar.jsx` | `isOpen`, `onClose` | Collapsible sidebar with 8 navigation links, quota tracker, and mobile overlay backdrop. |
+| **`NavigationItem`** | `client/src/components/NavigationItem.jsx` | `to`, `label`, `icon`, `badge`, `badgeVariant`, `onClick` | NavLink wrapper applying active route highlights and triggering drawer close on mobile. |
+| **`BackendStatusBadge`** | `client/src/components/BackendStatusBadge.jsx` | `compact` (boolean) | Reactive widget that triggers `checkBackendHealth()`, managing loading, connected, and error states. |
 
 ---
 
