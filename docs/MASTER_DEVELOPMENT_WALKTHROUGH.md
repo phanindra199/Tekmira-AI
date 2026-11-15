@@ -15,9 +15,10 @@
 7. [Day 5: MongoDB Document Database Foundation & Mongoose Schemas](#7-day-5-mongodb-document-database-foundation--mongoose-schemas)
 8. [Day 6: Authentication & Middleware Foundation (Bcrypt + JWT)](#8-day-6-authentication--middleware-foundation-bcrypt--jwt)
 9. [Day 7: REST API Architecture, Zod Validation & Full-Stack Integration](#9-day-7-rest-api-architecture-zod-validation--full-stack-integration)
-10. [Week 2 Roadmap Preview (Days 8–14)](#10-week-2-roadmap-preview-days-814)
-11. [Comprehensive System Architecture & Data Flow Diagrams](#11-comprehensive-system-architecture--data-flow-diagrams)
-12. [Master Viva Voce & Technical Defense Cheat Sheet](#12-master-viva-voce--technical-defense-cheat-sheet)
+10. [Week 2 Detailed Roadmap: AI & Evidence Extraction Engine (Days 8–14)](#10-week-2-detailed-roadmap-ai--evidence-extraction-engine-days-814)
+11. [Week 3 Detailed Roadmap: Quality, Security & Release Engineering (Days 15–21)](#11-week-3-detailed-roadmap-quality-security--release-engineering-days-1521)
+12. [Comprehensive System Architecture & Data Flow Diagrams](#12-comprehensive-system-architecture--data-flow-diagrams)
+13. [Master Viva Voce & Technical Defense Cheat Sheet](#13-master-viva-voce--technical-defense-cheat-sheet)
 
 ---
 
@@ -202,20 +203,146 @@ Created [`server/src/services/jobApplicationService.js`](file:///server/src/serv
 
 ---
 
-## 10. Week 2 Roadmap Preview (Days 8–14)
+## 10. Week 2 Detailed Roadmap: AI & Evidence Extraction Engine (Days 8–14)
 
-With the Week 1 foundation (React, Express, PostgreSQL, MongoDB, JWT Auth, and REST APIs) 100% complete, Week 2 shifts into the **AI & Evidence Extraction Engine**:
-- **Day 8:** Gemini 1.5 Pro Prompt Engineering & Structured JSON Output.
-- **Day 9:** Resume Parsing Pipeline (PDF stream extraction via `pdf-parse` & Gemini claim structuring).
-- **Day 10:** GitHub Mining Engine (Octokit integration, authentic author commit verification, AST dependency analysis).
-- **Day 11:** 3-Way Triangulation Algorithm (Intersection of claims, code proof, and job requirements).
-- **Day 12:** Placement Readiness Scoring Model (Weighted mathematical formula).
-- **Day 13:** Interactive Evidence Matrix & Clickable Code Proof UI.
-- **Day 14:** Remediation Roadmap Generator & Week 2 Comprehensive Milestone Audit.
+With the foundational full-stack architecture (React, Express, PostgreSQL, MongoDB, JWT Auth, and REST APIs) 100% complete and verified, Week 2 shifts into the **AI & Evidence Extraction Engine**:
+
+### Day 8: Gemini API Integration
+- **Target:** Integrate Gemini securely through the Express backend and build the first AI service.
+- **Concepts:** LLM API integration, environment variables, async/await, third-party API error handling.
+- **Prompt 8.1 – Teach LLM and Gemini fundamentals:** Model architectures, API tokens, temperature/top-p, prompt-response lifecycle, latency, token costs, and failure modes.
+- **Prompt 8.2 – Integrate Gemini backend service:** Install `@google/genai` official SDK, load `GEMINI_API_KEY` from server environment variables, build singleton Gemini client, and create `POST /api/ai/analyze-resume` endpoint.
+- **Prompt 8.3 – Connect AI endpoint to frontend:** Build candidate UI workflow that sends resume text or clearly marked development sample to the backend and renders AI feedback with loading, retry, and error states.
+- **Prompt 8.4 – Test and document Gemini integration:** Automated unit tests with mocked Gemini responses covering missing API keys, rate limits (HTTP 429), timeouts, and malformed outputs.
+- **End-of-Day Quality Gate:** Zero exposed API keys, mocked test suite passing, end-to-end backend-to-frontend text analysis verified.
+
+### Day 9: Prompt Engineering & Structured Outputs
+- **Target:** Create reliable prompts and schema-validated JSON outputs for analysis.
+- **Concepts:** System instructions, prompt engineering, structured outputs (`responseSchema`), input validation, LLM hallucination suppression.
+- **Prompt 9.1 – Teach prompt engineering:** System vs user prompts, few-shot examples, negative constraints, hallucination reduction, and prompt quality evaluation.
+- **Prompt 9.2 – Create reusable prompt templates:** Standardized prompt templates for resume skill extraction, repository evidence interpretation, job requirement extraction, and gap analysis.
+- **Prompt 9.3 – Implement structured JSON output:** Configure Gemini `responseSchema` or server-side Zod validation for extracted skills, confidence ratings, and evidence citations.
+- **Prompt 9.4 – Test prompt and schema quality:** Edge cases including sparse resumes, conflicting claims, adversarial prompt injection text, and malformed model outputs.
+- **End-of-Day Quality Gate:** 100% schema validation pass rate, zero hallucinated evidence allowed, prompt injection safely treated as untrusted text.
+
+### Day 10: Resume Upload & PDF Text Extraction
+- **Target:** Build secure PDF upload, text extraction, and MongoDB persistence.
+- **Concepts:** Multipart/form-data, Multer streaming, MIME type validation, magic byte file signatures, PDF stream parsing (`pdf-parse`), MongoDB CRUD.
+- **Prompt 10.1 – Teach file upload and PDF extraction:** Binary streams, file signatures (`%PDF`), buffer handling, and security risks of arbitrary file execution.
+- **Prompt 10.2 – Implement secure resume upload:** Multer middleware with 5MB size limit, MIME type whitelist (`application/pdf`), sanitized filename generation, and temporary storage cleanup.
+- **Prompt 10.3 – Extract and persist resume data:** Extract plain text from PDF stream, store structured metadata in MongoDB `ResumeDocument`, and associate with authenticated candidate.
+- **Prompt 10.4 – Test upload cases:** Test suite for valid PDF, invalid extension, wrong MIME, corrupt header, oversized file, and empty PDF.
+- **End-of-Day Quality Gate:** Multi-page PDF text extraction verified, MongoDB resume records linked to candidate, error boundaries active for unreadable/scanned PDFs.
+
+### Day 11: GitHub REST API Integration
+- **Target:** Retrieve public repository metadata and source evidence safely.
+- **Concepts:** GitHub REST API v3, Octokit, URL parsing, tree walking, rate limit caching, untrusted code handling.
+- **Prompt 11.1 – Teach GitHub API and repository evidence:** Owner/repo identifiers, Git tree objects, pagination, API rate limits (60/hr unauthenticated vs 5000/hr authenticated).
+- **Prompt 11.2 – Implement public repository validation:** Sanitize candidate-submitted GitHub URLs, parse owner/repo slugs safely, and check existence via GitHub API.
+- **Prompt 11.3 – Retrieve repository evidence:** Fetch repo metadata, languages breakdown, directory trees, and targeted file contents (`package.json`, source files). Store snapshot in MongoDB `RepositorySnapshot`.
+- **Prompt 11.4 – Handle API limits and test:** Implement rate limit headers inspection, caching layer, and automated tests with mocked GitHub responses.
+- **End-of-Day Quality Gate:** Repository snapshots persisted with authentic commit authors, zero arbitrary code execution, rate limits handled gracefully.
+
+### Day 12: Skill Evidence Matching Engine
+- **Target:** Compare resume claims, repository evidence, and job requirements using explainable logic.
+- **Concepts:** 3-Way Triangulation algorithm, deterministic skill normalization, explainable scoring formula, Gemini contextual interpretation, report persistence.
+- **Prompt 12.1 – Model the skill verification problem:** Define entities and mathematical formula for Claimed vs Demonstrated vs Required skills.
+- **Prompt 12.2 – Build deterministic skill matching:** Exact and alias matching, category grouping, AST-to-claim mapping, and evidence line citation (e.g. `express` in `package.json`).
+- **Prompt 12.3 – Add AI contextual interpretation:** Use Gemini to interpret ambiguous implementation patterns, evaluate architectural depth, and generate explanatory rationales.
+- **Prompt 12.4 – Generate and persist reports:** Synthesize findings into `SkillAnalysisReport` document in MongoDB with overall readiness score, verified competencies, and missing gaps.
+- **End-of-Day Quality Gate:** Deterministic scoring logic verified with 0% randomness in mathematical scores, reports linked to both candidate and repository snapshot.
+
+### Day 13: Analysis Dashboard Integration
+- **Target:** Display real analysis data in reusable React dashboard components.
+- **Concepts:** React component composition, asynchronous data fetching, loading skeletons, empty states, error boundaries, responsive charts.
+- **Prompt 13.1 – Connect real report APIs:** Wire candidate dashboard to `GET /api/analysis/:id` using centralized `apiClient`. Show clear empty state when no report exists.
+- **Prompt 13.2 – Build analysis dashboard sections:** Render Placement Readiness Index meter, Claimed Skills list, Verified Evidence matrix, and Missing Skill gaps.
+- **Prompt 13.3 – Add robust UI states:** Implement smooth transitions between loading indicator, error alert with retry button, empty state, and completed report.
+- **Prompt 13.4 – Verify dashboard integration:** Full-stack integration tests verifying data flows from MongoDB through Express REST controllers into React state.
+- **End-of-Day Quality Gate:** Responsive UI tested across mobile, tablet, and desktop; zero hardcoded fake scores; interactive clickable evidence links.
+
+### Day 14: AI Interview Preparation
+- **Target:** Generate project-grounded viva questions and evaluate student answers cautiously.
+- **Concepts:** Grounded viva question generation, multi-difficulty rubrics, candidate answer evaluation, session tracking in MongoDB.
+- **Prompt 14.1 – Design interview preparation flow:** Define viva simulation architecture grounded strictly in the candidate's verified GitHub code.
+- **Prompt 14.2 – Implement question generation:** Express endpoint `POST /api/ai/interview/generate` calling Gemini with repo context to produce targeted questions.
+- **Prompt 14.3 – Implement answer evaluation:** Endpoint `POST /api/ai/interview/evaluate` comparing candidate explanations against technical rubrics.
+- **Prompt 14.4 – Build interview UI and tests:** Interactive Q&A interface with timer, answer submission box, scoring feedback, and historical performance tracking.
+- **End-of-Day Quality Gate:** Viva questions reference candidate's real files, evaluation is objective and constructive, session history saved in MongoDB.
 
 ---
 
-## 11. Comprehensive System Architecture & Data Flow Diagrams
+## 11. Week 3 Detailed Roadmap: Quality, Security & Release Engineering (Days 15–21)
+
+Week 3 delivers enterprise hardening, comprehensive automated testing, containerization, production deployment, and project assessor defense preparation:
+
+### Day 15: Controlled Forms & Validation Boundary
+- **Target:** Make resume, GitHub, and job-description forms robust and accessible.
+- **Concepts:** Controlled inputs, form validation, client UX + server Zod validation boundary, async/await submission handling.
+- **Prompt 15.1 – Audit forms:** Review all user input surfaces (registration, login, resume upload, repo URL input, job description input).
+- **Prompt 15.2 – Implement controlled inputs:** Use React state for controlled inputs, accessible labels (`aria-*`), disabled loading states, and double-submit prevention.
+- **Prompt 15.3 – Add client and server validation:** Instant inline client feedback for fast UX, coupled with strict server-side Zod schemas as the non-bypassable security boundary.
+- **Prompt 15.4 – Test form edge cases:** Automated tests for empty strings, whitespace trimming, invalid URL protocols, SQL/script injection attempts, and network errors.
+- **End-of-Day Quality Gate:** Zero unhandled form errors, keyboard-accessible navigation, server rejects all invalid payloads.
+
+### Day 16: Automated API & Unit Testing
+- **Target:** Add meaningful unit and integration tests for critical application flows.
+- **Concepts:** Unit testing, integration testing, Supertest, test fixtures, test isolation, mock external services.
+- **Prompt 16.1 – Teach testing strategy:** Pyramid of testing (Unit vs Integration vs E2E), mocking principles, and why third-party LLM and GitHub APIs must be mocked in CI/CD.
+- **Prompt 16.2 – Configure test tooling:** Setup Jest/Vitest and Supertest in `server/`, separate test environment configuration (`.env.test`), and in-memory test databases.
+- **Prompt 16.3 – Write unit tests:** Unit tests for skill normalization algorithms, placement readiness score calculations, Zod schemas, and prompt formatters.
+- **Prompt 16.4 – Write API integration tests:** Automated endpoint tests covering health check, registration, login, token refresh, protected resource access, and 404/500 error handlers.
+- **End-of-Day Quality Gate:** Test suite executes with 100% pass rate, zero real API calls made during test execution, comprehensive test report generated.
+
+### Day 17: Docker Containerization
+- **Target:** Containerize the application and its databases for reproducible local development and deployment.
+- **Concepts:** Docker, multi-stage Dockerfiles, Docker Compose, bridge networking, persistent named volumes, health checks.
+- **Prompt 17.1 – Teach Docker fundamentals:** Images vs containers, container layers, cache optimization, network isolation, and database volume persistence.
+- **Prompt 17.2 – Create Docker configuration:** Multi-stage `Dockerfile` for React client (Nginx alpine runtime) and Express server (Node.js alpine), plus root `docker-compose.yml`.
+- **Prompt 17.3 – Configure container environments:** Safe `.env.example` with container service hostnames (`postgres`, `mongo`) replacing `localhost`.
+- **Prompt 17.4 – Run and verify containers:** Start full multi-container stack (`docker compose up --build`), verify database volume persistence across restarts, and run health check probes.
+- **End-of-Day Quality Gate:** Complete stack spins up with a single command, database data persists across container destruction, health checks green.
+
+### Day 18: MongoDB Aggregation & Query Optimization
+- **Target:** Add meaningful aggregation reports and improve query patterns where justified.
+- **Concepts:** MongoDB aggregation pipelines (`$match`, `$group`, `$project`, `$sort`, `$unwind`), indexing strategies, performance profiling (`explain()`).
+- **Prompt 18.1 – Teach aggregation pipelines:** Pipeline stages, document transformation, memory limits, and index utilization in pipeline queries.
+- **Prompt 18.2 – Implement useful aggregations:** Campus cohort skill distribution, average readiness index by graduation year, most frequent missing skills, and candidate analysis trends.
+- **Prompt 18.3 – Review query performance:** Inspect query execution plans with `explain("executionStats")`, add compound indexes on high-cardinality fields (`candidateId + createdAt`).
+- **Prompt 18.4 – Test aggregation outputs:** Fixture-based tests verifying pipeline math across empty collections, single users, and multi-candidate datasets.
+- **End-of-Day Quality Gate:** Aggregation queries execute in <50ms, compound indexes documented and verified, zero in-memory document grouping bottlenecks.
+
+### Day 19: Production Deployment
+- **Target:** Prepare and deploy frontend, backend, and managed databases safely.
+- **Concepts:** Production cloud deployment, Vercel/Netlify for client, Render/Railway for Express, Neon for PostgreSQL, MongoDB Atlas for MongoDB.
+- **Prompt 19.1 – Prepare deployment plan:** Select cost-free/student-tier managed cloud providers with automated branch deployment hooks.
+- **Prompt 19.2 – Prepare production configuration:** Configure production build scripts, strict CORS allowlist for production client domain, secure HTTPS cookies, and environment variable documentation.
+- **Prompt 19.3 – Deploy backend and databases:** Provision managed PostgreSQL on Neon, MongoDB cluster on Atlas, and deploy Express REST API to cloud runtime.
+- **Prompt 19.4 – Deploy frontend and smoke test:** Deploy React production build to Vercel/Netlify, set `VITE_API_URL`, and execute live smoke test across registration, login, and analysis flows.
+- **End-of-Day Quality Gate:** Live HTTPS URLs documented, production health check responding with HTTP 200, zero development secrets exposed.
+
+### Day 20: Security, Reliability & Responsive Audit
+- **Target:** Audit user data isolation, untrusted content handling, and application quality.
+- **Concepts:** OWASP Top 10, threat modeling, prompt injection mitigation, role-based access control, responsive layout audit.
+- **Prompt 20.1 – Perform threat modeling:** Document threat vectors: credential stuffing, JWT tampering, unauthorized document access, API key leakage, and denial of service.
+- **Prompt 20.2 – Defend against untrusted content and prompt injection:** Strict separation of system prompts from untrusted resume and repo text; enforce input sanitization and length caps.
+- **Prompt 20.3 – Audit API and data access:** Server-side ownership checks on all endpoints (`req.user.id === resource.userId`), rate limiting with `express-rate-limit`, and safe error masking.
+- **Prompt 20.4 – Audit frontend quality:** Mobile viewport responsiveness test (320px to 4K), screen reader accessibility check, focus rings, and console error eradication.
+- **End-of-Day Quality Gate:** Threat model documented in `docs/SECURITY.md`, prompt injection defenses verified by automated tests, responsive layout certified.
+
+### Day 21: Documentation, Concept Evidence & Viva Readiness
+- **Target:** Prepare the public repository and evidence map for Project Assessor evaluation.
+- **Concepts:** Concept evidence mapping, documentation consistency, Git workflow, project explanation.
+- **Prompt 21.1 – Audit repository against actual implementation:** Codebase inspection verifying every documented claim in PRD/HLD/LLD matches real source code. Eliminate dead code and fake mocks.
+- **Prompt 21.2 – Update required documentation:** Synchronize `README.md`, `docs/PRD.md`, `docs/HLD.md`, and `docs/LLD.md` with accurate architecture diagrams and API route tables.
+- **Prompt 21.3 – Create concept evidence map:** Author `docs/CONCEPT_EVIDENCE.md` listing every curriculum concept, its source file path, line numbers, and demonstration steps.
+- **Prompt 21.4 – Prepare viva practice:** Conduct comprehensive viva practice covering full-stack concepts, database trade-offs, security defenses, and AI prompt engineering.
+- **Prompt 21.5 – Final release verification:** Execute clean production build, run all automated test suites, scan for accidental secrets with `git-secrets`, and push final release tag to GitHub `main`.
+- **End-of-Day Quality Gate:** 100% test pass rate, comprehensive `CONCEPT_EVIDENCE.md` complete, clean Git log, repository ready for Project Assessor grading.
+
+---
+
+## 12. Comprehensive System Architecture & Data Flow Diagrams
 
 ### 11.1 Full-Stack Topology
 ```mermaid
@@ -267,7 +394,7 @@ Client Receives Standardized { success, message, data }
 
 ---
 
-## 12. Master Viva Voce & Technical Defense Cheat Sheet
+## 13. Master Viva Voce & Technical Defense Cheat Sheet
 
 | Question | Examiner's Focus | Key Technical Answer |
 | :--- | :--- | :--- |
