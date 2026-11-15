@@ -13,13 +13,16 @@
     "db:seed": "node src/database/seed.js",
     "test:relational": "node src/database/testRelationalQueries.js",
     "test:mongo": "node src/database/testMongoCrud.js",
-    "test": "node src/database/testRelationalQueries.js && node src/database/testMongoCrud.js"
+    "test:auth": "node src/test/testAuthSecurity.js",
+    "test": "node src/database/testRelationalQueries.js && node src/database/testMongoCrud.js && node src/test/testAuthSecurity.js"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.12.1",
     "prisma": "^6.19.3"
   },

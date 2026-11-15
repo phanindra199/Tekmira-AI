@@ -145,20 +145,29 @@ tekmira-ai/
   }
   ```
 
+#### Authentication & User Endpoints (Implemented — Day 6)
+- **`POST /api/auth/register`**: Registers a candidate with bcrypt password hashing (HTTP 201).
+- **`POST /api/auth/login`**: Authenticates credentials and issues stateless HS256 JWT (HTTP 200).
+- **`GET /api/auth/me` & `GET /api/users/me`**: Protected profile endpoint requiring valid Bearer token (HTTP 200).
+
+#### MongoDB Analysis & Document Endpoints (Implemented — Day 5)
+- **`POST /api/analysis/resumes`**: Stores parsed resume document (HTTP 201).
+- **`GET /api/analysis/resumes/:id`**: Fetches candidate resume by ID with ownership verification (HTTP 200).
+- **`POST /api/analysis/repositories`**: Upserts mined GitHub repository snapshot (HTTP 200).
+- **`GET /api/analysis/repositories/user/:userId`**: Lists all mined repositories for candidate (HTTP 200).
+- **`POST /api/analysis/reports`**: Stores 3-way triangulation skill analysis report (HTTP 201).
+- **`GET /api/analysis/reports/:id`**: Fetches complete explainable report with evidence links (HTTP 200).
+
 ---
 
 ### 3.2 Planned API Endpoints (Scheduled Modules)
 
 | Method | Planned Endpoint | Module | Description | Expected Payload |
 | :--- | :--- | :--- | :--- | :--- |
-| `POST` | `/api/v1/auth/register` | Module 4 | Student account creation | `{ email, password, fullName, githubUsername, degree, gradYear }` |
-| `POST` | `/api/v1/auth/login` | Module 4 | User authentication | `{ email, password }` ➔ `{ token, user }` |
-| `GET` | `/api/v1/auth/me` | Module 4 | Current user profile | Bearer JWT ➔ `{ user }` |
-| `POST` | `/api/v1/resume/upload` | Module 5 | Upload & extract resume | `multipart/form-data` (PDF) ➔ `{ resumeId, skills, projects }` |
-| `GET` | `/api/v1/github/scan/:username` | Module 6 | Mine public GitHub repositories | None ➔ `{ repos, languages, authenticCommits }` |
-| `POST` | `/api/v1/jobs/match` | Module 7 | Ingest JD & normalize skills | `{ title, description }` ➔ `{ jobId, requiredSkills }` |
-| `POST` | `/api/v1/analysis/triangulate` | Module 8 | Run 3-way triangulation | `{ resumeId, githubUsername, jobId }` ➔ Complete Report JSON |
-| `GET` | `/api/v1/analysis/report/:id` | Module 8 | Fetch existing report | None ➔ Complete Report JSON |
+| `POST` | `/api/v1/resume/upload` | Day 8 | Upload PDF & extract claims with Gemini | `multipart/form-data` (PDF) ➔ `{ resumeId, skills, projects }` |
+| `GET` | `/api/v1/github/scan/:username` | Day 9 | Mine public GitHub repositories with Octokit | None ➔ `{ repos, languages, authenticCommits }` |
+| `POST` | `/api/v1/jobs/match` | Day 10 | Ingest JD & normalize skills | `{ title, description }` ➔ `{ jobId, requiredSkills }` |
+| `POST` | `/api/v1/analysis/triangulate` | Day 11 | Run 3-way triangulation with Gemini | `{ resumeId, githubUsername, jobId }` ➔ Complete Report JSON |
 
 ---
 
@@ -328,5 +337,5 @@ Implemented and operational in `server/src/models/`:
 | **`ResumeService`** | `server/src/services/resumeService.js` | **IMPLEMENTED** | CRUD operations for unstructured candidate resume records in MongoDB with candidate ownership checks. |
 | **`RepositoryService`** | `server/src/services/repositoryService.js` | **IMPLEMENTED** | Upsert and retrieval operations for mined GitHub repository snapshots and authentic commit lists in MongoDB. |
 | **`AnalysisReportService`** | `server/src/services/analysisReportService.js` | **IMPLEMENTED** | Stores, updates, and queries complete 3-way skill triangulation analysis reports in MongoDB. |
-| **`AuthService`** | `server/src/services/authService.js` | *PLANNED (Day 6)* | Salted password hashing via `bcrypt`, credential verification, and JWT generation/validation. |
+| **`AuthService`** | `server/src/services/authService.js` | **IMPLEMENTED** | Salted password hashing via `bcryptjs`, timing-safe credential verification, JWT issuance, and user sanitization. |
 | **`GeminiTriangulationService`**| `server/src/services/triangulationService.js` | *PLANNED (Day 8)* | Orchestrating Gemini 1.5 Pro to synthesize resume claims against GitHub code evidence and target JD. |

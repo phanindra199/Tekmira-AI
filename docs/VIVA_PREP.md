@@ -415,4 +415,67 @@ Mongoose provides an Object Data Modeling (ODM) layer on top of MongoDB with:
 3. **Viva Question:** *"How does Tekmira AI maintain referential consistency across PostgreSQL and MongoDB without distributed transactions?"*
    - **Answer:** *"PostgreSQL serves as the authoritative source of identity (the 'Anchor'). The MongoDB documents store the candidate's PostgreSQL `userId` as an indexed foreign UUID string. When a user requests their dashboard, Express coordinates queries across PostgreSQL (profile/jobs) and MongoDB (resumes/reports) asynchronously using `Promise.all`."*
 
+---
+
+## 10. Authentication, Password Hashing & JWT Security (Day 6)
+
+### 10.1 Authentication versus Authorization
+- **Authentication (AuthN):** Verifying *who you are* (e.g. validating email and password to prove candidate identity).
+- **Authorization (AuthZ):** Determining *what you are allowed to do* (e.g. verifying that a user with role `STUDENT` cannot edit another student's resume or access recruiter admin endpoints).
+
+---
+
+### 10.2 Password Hashing versus Encryption
+- **Encryption (Two-Way):** Ciphertext can be decrypted back into original plaintext if the decryption key is known. *Never use encryption for passwords.*
+- **Hashing (One-Way):** Mathematical one-way trapdoor function. It transforms variable-length passwords into a fixed-length string (digest). It is computationally infeasible to reverse.
+- **Why `bcrypt`?**
+  1. **Cryptographic Salt:** A randomly generated string appended to the password before hashing. This ensures two users with identical passwords (`Password123`) produce completely different hashes, completely neutralizing **Rainbow Table** precomputation attacks.
+  2. **Adaptive Work Factor (Salt Rounds):** `bcrypt` is intentionally computationally slow. By configuring 10 or 12 salt rounds, hashing takes ~50–100ms. While unnoticeable to a human logging in, this makes offline brute-force cracking on GPU clusters economically impossible.
+
+---
+
+### 10.3 JSON Web Token (JWT) Anatomy & Stateless Architecture
+A JWT is a compact, URL-safe token consisting of three dot-separated Base64Url-encoded segments: `Header.Payload.Signature`
+1. **Header:** Algorithm and token type (`{"alg": "HS256", "typ": "JWT"}`).
+2. **Payload (Claims):** Information about the authenticated entity (`userId`, `email`, `role`, `iat` [issued at], `exp` [expiration]).
+   - *Security Rule:* Payloads are only Base64 encoded, **not encrypted**. Never store passwords, API keys, or sensitive credentials in a JWT payload!
+3. **Signature:** Calculated using the server's private secret key:
+   $$\text{Signature} = \text{HMACSHA256}(\text{Base64Url}(\text{Header}) + "." + \text{Base64Url}(\text{Payload}), \text{JWT\_SECRET})$$
+
+```
+[ Candidate Browser ]                       [ Express API Engine ]
+         |                                            |
+         | --- 1. POST /api/auth/login -------------> |
+         |        { email, password }                 | (Validates & compares bcrypt hash)
+         | <--- 2. Returns JWT Token + User info ---- |
+         |                                            |
+         | --- 3. GET /api/users/me ----------------> |
+         |        Authorization: Bearer <token>       | [ authMiddleware ]
+         |                                            | - Verifies HMAC signature
+         |                                            | - Checks expiration (exp)
+         |                                            | - Attaches req.user
+         | <--- 4. Protected Resource (200 OK) ------ |
+```
+
+---
+
+### 10.4 Express Middleware Execution Pipeline Order
+Middleware executes strictly in the sequence registered in `app.js`:
+1. `cors()`: Validates origin and handles preflight `OPTIONS` requests.
+2. `express.json()`: Parses incoming JSON bodies into `req.body`.
+3. `authMiddleware`: Extracts `Authorization: Bearer <token>`, verifies signature with `jwt.verify()`, and attaches safe `req.user`. If invalid or expired, immediately halts the request and returns `401 Unauthorized`.
+4. Route Controller: Executes business logic with verified `req.user`.
+5. Centralized Error Handler: Catches any unhandled errors with safe error formatting.
+
+---
+
+### 10.5 Viva Voce Questions & Practice Exercises
+1. **Viva Question:** *"Why do we use stateless JWT authentication instead of server-side sessions stored in memory?"*
+   - **Answer:** *"Server-side sessions require state to be maintained in server RAM or a centralized Redis cache. In a multi-instance or cloud environment, session state creates sticky-session requirements. JWT is completely stateless: the server cryptographically validates the token on every request using its secret key without looking up session tables, allowing the API to scale horizontally across any number of servers."*
+2. **Viva Question:** *"What happens if an attacker tampers with the `role` field inside a JWT (changing `STUDENT` to `ADMIN`)?"*
+   - **Answer:** *"The server will immediately reject the request with `401 Unauthorized`. Any change to the payload invalidates the cryptographic signature, because the signature is computed over the payload using the server's private secret key. Without the secret key, the attacker cannot forge a valid signature for the modified payload."*
+3. **Viva Question:** *"How do you handle user logout with stateless JWTs?"*
+   - **Answer:** *"On the client, logout is achieved immediately by clearing the token from memory or storage. For high-security invalidation prior to expiration, token blacklisting in a fast in-memory store (Redis with TTL matching token expiry) or rotating refresh token families in PostgreSQL is implemented."*
+
+
 

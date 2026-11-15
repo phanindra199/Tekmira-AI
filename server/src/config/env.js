@@ -15,5 +15,7 @@ export const config = {
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
   databaseUrl: process.env.DATABASE_URL || '',
   mongodbUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/tekmira_docs',
+  jwtSecret: process.env.JWT_SECRET || 'tekmira_default_dev_secret_key_change_in_production',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   isProduction: process.env.NODE_ENV === 'production'
 };
