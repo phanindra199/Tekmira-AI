@@ -344,7 +344,7 @@ Week 3 delivers enterprise hardening, comprehensive automated testing, container
 
 ## 12. Comprehensive System Architecture & Data Flow Diagrams
 
-### 11.1 Full-Stack Topology
+### 12.1 Full-Stack Topology
 ```mermaid
 graph TD
     Client[React 18 + Vite Client<br/>Port 5173]
@@ -363,7 +363,7 @@ graph TD
     Services -.->|Scheduled Day 9| GitHub[GitHub REST API / Octokit]
 ```
 
-### 11.2 Request-Response Lifecycle & Middleware Order
+### 12.2 Request-Response Lifecycle & Middleware Order
 ```
 Client Request
       |
