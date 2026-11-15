@@ -3,393 +3,1341 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tekmira AI — Complete Master Architecture & Development Notes</title>
+  <title>Tekmira AI — Complete Master Architecture & Week 1 Engineering Notes</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
     :root {
       --primary: #10223D;
       --secondary: #203753;
       --coral: #FF806F;
+      --coral-light: #FFF0EE;
+      --canvas: #FFFFFF;
       --light-bg: #F7F9FC;
+      --surface: #F1F5F9;
       --text: #172033;
       --muted: #64748B;
       --border: #E2E8F0;
+      --border-dark: #CBD5E1;
       --success: #059669;
+      --success-light: #ECFDF5;
+      --warning: #D97706;
+      --warning-light: #FFFBEB;
+      --danger: #DC2626;
+      --danger-light: #FEF2F2;
+      --code-bg: #0F172A;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       color: var(--text);
       background-color: #FFFFFF;
-      line-height: 1.65;
-      padding: 40px;
-      max-width: 960px;
+      line-height: 1.7;
+      padding: 48px 32px;
+      max-width: 1040px;
       margin: 0 auto;
+      font-size: 14px;
     }
 
-    /* Print Optimizations for PDF Export */
+    /* Print & PDF Export Rules */
     @media print {
-      body { padding: 0; max-width: 100%; font-size: 11pt; }
+      body {
+        padding: 0;
+        max-width: 100%;
+        font-size: 10pt;
+        line-height: 1.5;
+        color: #000000;
+        background: #FFFFFF;
+      }
       .no-print { display: none !important; }
       .page-break { page-break-before: always; }
-      h1, h2, h3 { page-break-after: avoid; }
-      pre, table { page-break-inside: avoid; }
+      h1, h2, h3, h4 { page-break-after: avoid; }
+      pre, table, .diagram-container, .card, .callout { page-break-inside: avoid; }
+      @page {
+        margin: 1.6cm 1.4cm;
+        size: A4 portrait;
+      }
     }
 
-    /* Header & Branding */
+    /* Header & Branding Banner */
     header {
       border-bottom: 3px solid var(--primary);
-      padding-bottom: 24px;
+      padding-bottom: 28px;
       margin-bottom: 36px;
     }
+
     .badge-bar {
       display: flex;
+      flex-wrap: wrap;
       gap: 10px;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
-    .badge {
+
+    .pill {
       font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
+      letter-spacing: 0.6px;
       padding: 4px 10px;
       border-radius: 9999px;
-      letter-spacing: 0.05em;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
     }
-    .badge-navy { background: #E0E7FF; color: var(--primary); }
-    .badge-coral { background: #FFE4E0; color: #D9483B; }
-    .badge-success { background: #D1FAE5; color: var(--success); }
+    .pill-navy { background-color: var(--primary); color: #FFFFFF; }
+    .pill-coral { background-color: var(--coral); color: #FFFFFF; }
+    .pill-success { background-color: var(--success); color: #FFFFFF; }
+    .pill-outline { background-color: transparent; border: 1px solid var(--border-dark); color: var(--muted); }
 
     h1 {
       font-size: 32px;
       font-weight: 800;
       color: var(--primary);
-      letter-spacing: -0.02em;
-      margin-bottom: 6px;
-    }
-    .tagline {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--coral);
+      line-height: 1.25;
       margin-bottom: 8px;
-    }
-    .meta {
-      font-size: 13px;
-      color: var(--muted);
+      letter-spacing: -0.5px;
     }
 
-    /* Print Button */
-    .print-btn-bar {
-      margin-bottom: 24px;
-      display: flex;
-      justify-content: flex-end;
-    }
-    .btn-print {
-      background: var(--primary);
-      color: white;
-      padding: 8px 18px;
-      border-radius: 8px;
+    .tagline {
+      font-size: 18px;
       font-weight: 600;
-      font-size: 13px;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 2px 4px rgba(16, 34, 61, 0.15);
-      transition: background 0.2s;
+      color: var(--coral);
+      margin-bottom: 12px;
     }
-    .btn-print:hover { background: var(--secondary); }
+
+    .meta-desc {
+      color: var(--muted);
+      font-size: 13.5px;
+      max-width: 820px;
+    }
 
     /* Headings */
     h2 {
       font-size: 22px;
       font-weight: 700;
       color: var(--primary);
-      border-left: 4px solid var(--coral);
-      padding-left: 12px;
-      margin: 36px 0 16px 0;
-    }
-    h3 {
-      font-size: 17px;
-      font-weight: 600;
-      color: var(--secondary);
-      margin: 22px 0 10px 0;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 8px;
+      margin-top: 44px;
+      margin-bottom: 18px;
+      letter-spacing: -0.3px;
     }
 
-    /* Paragraphs & Lists */
+    h3 {
+      font-size: 16.5px;
+      font-weight: 600;
+      color: var(--secondary);
+      margin-top: 26px;
+      margin-bottom: 12px;
+    }
+
+    h4 {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 18px;
+      margin-bottom: 8px;
+    }
+
     p { margin-bottom: 14px; }
     ul, ol { margin-left: 24px; margin-bottom: 16px; }
     li { margin-bottom: 6px; }
 
-    /* Code & Blocks */
-    code {
-      font-family: 'Fira Code', monospace;
-      font-size: 13px;
-      background: #F1F5F9;
-      padding: 2px 6px;
-      border-radius: 4px;
-      color: #0F172A;
-    }
-    pre {
-      background: #0F172A;
-      color: #E2E8F0;
-      padding: 16px;
-      border-radius: 8px;
-      overflow-x: auto;
-      font-family: 'Fira Code', monospace;
-      font-size: 12px;
-      line-height: 1.5;
-      margin: 16px 0;
-    }
-    pre code {
-      background: transparent;
-      padding: 0;
-      color: inherit;
-    }
+    strong { color: var(--primary); font-weight: 600; }
+    em { font-style: italic; }
 
     /* Tables */
     table {
       width: 100%;
       border-collapse: collapse;
-      margin: 20px 0;
+      margin: 18px 0 24px 0;
       font-size: 13px;
-    }
-    th, td {
+      background: #FFFFFF;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      border-radius: 6px;
+      overflow: hidden;
       border: 1px solid var(--border);
-      padding: 10px 14px;
-      text-align: left;
     }
+
     th {
-      background: var(--light-bg);
+      background-color: var(--primary);
+      color: #FFFFFF;
       font-weight: 600;
-      color: var(--primary);
+      text-align: left;
+      padding: 11px 13px;
+      letter-spacing: 0.3px;
     }
-    tr:nth-child(even) { background: #FAFAFC; }
+
+    td {
+      padding: 10px 13px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tr:nth-child(even) td { background-color: var(--light-bg); }
+    tr:last-child td { border-bottom: none; }
+
+    /* Code Blocks */
+    pre {
+      background-color: var(--code-bg);
+      color: #F8FAFC;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      padding: 16px 18px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 16px 0 20px 0;
+      border: 1px solid #1E293B;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      background: var(--surface);
+      color: var(--primary);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      border: none;
+      font-size: 12px;
+    }
 
     /* Callout Boxes */
     .callout {
-      background: var(--light-bg);
-      border: 1px solid var(--border);
       border-left: 4px solid var(--primary);
-      padding: 16px;
-      border-radius: 6px;
-      margin: 18px 0;
+      background-color: var(--light-bg);
+      padding: 16px 20px;
+      border-radius: 0 8px 8px 0;
+      margin: 20px 0;
+      border-top: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
     }
     .callout-coral {
       border-left-color: var(--coral);
-      background: #FFF9F8;
+      background-color: var(--coral-light);
+    }
+    .callout-success {
+      border-left-color: var(--success);
+      background-color: var(--success-light);
+    }
+    .callout-warning {
+      border-left-color: var(--warning);
+      background-color: var(--warning-light);
     }
     .callout-title {
       font-weight: 700;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
+      font-size: 13.5px;
       margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
       color: var(--primary);
+    }
+    .callout-coral .callout-title { color: #C2410C; }
+    .callout-success .callout-title { color: var(--success); }
+    .callout-warning .callout-title { color: var(--warning); }
+
+    /* Visual Diagram Container */
+    .diagram-container {
+      background: #FFFFFF;
+      border: 1px solid var(--border-dark);
+      border-radius: 8px;
+      padding: 22px;
+      margin: 22px 0 26px 0;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(16, 34, 61, 0.04);
+    }
+    .diagram-caption {
+      margin-top: 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .diagram-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
     }
 
-    /* Timeline Cards */
-    .day-card {
+    /* Cards Grid */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin: 18px 0;
+    }
+    .card {
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 24px;
       background: #FFFFFF;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      border-radius: 8px;
+      padding: 16px 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
     }
-    .day-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 8px;
+
+    /* Table of Contents */
+    .toc-box {
+      background: var(--light-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 22px 26px;
+      margin: 24px 0 36px 0;
     }
-    .day-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--primary);
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 8px 24px;
+      margin-top: 14px;
     }
-    .commit-tag {
-      font-family: 'Fira Code', monospace;
+    .toc-item {
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .toc-item a {
+      color: var(--secondary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .toc-item a:hover {
+      color: var(--coral);
+      text-decoration: underline;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 2px solid var(--border);
+      margin-top: 50px;
+      padding-top: 20px;
+      text-align: center;
+      color: var(--muted);
       font-size: 12px;
-      background: #E2E8F0;
-      padding: 3px 8px;
-      border-radius: 4px;
     }
   </style>
 </head>
 <body>
 
-  <div class="print-btn-bar no-print">
-    <button class="btn-print" onclick="window.print()">🖨️ Export / Print as PDF</button>
-  </div>
-
+  <!-- ==================== HEADER & BRANDING ==================== -->
   <header>
     <div class="badge-bar">
-      <span class="badge badge-navy">Tekmira AI Engineering</span>
-      <span class="badge badge-coral">21-Day Autonomous Roadmap</span>
-      <span class="badge badge-success">Day 1 to Day 4 Verified</span>
+      <span class="pill pill-navy">Tekmira AI</span>
+      <span class="pill pill-coral">Beyond Claims. Driven by Evidence.</span>
+      <span class="pill pill-success">Week 1 Complete: Days 1–7</span>
+      <span class="pill pill-outline">React 18 + Node.js 22 + Postgres + Mongo</span>
     </div>
-    <h1>Tekmira AI — Complete Master Architecture & Notes</h1>
-    <div class="tagline">Beyond Claims. Driven by Evidence.</div>
-    <div class="meta">
-      <strong>Repository:</strong> https://github.com/phanindra199/Tekmira-AI.git &nbsp;|&nbsp; 
-      <strong>Branch:</strong> main &nbsp;|&nbsp; 
-      <strong>Generated:</strong> November 2026
+    <h1>Tekmira AI — Master Architecture & Engineering Notes</h1>
+    <div class="tagline">Comprehensive Technical Walkthrough: Week 1 Foundation & System Design</div>
+    <div class="meta-desc">
+      An exhaustive academic and engineering deep dive into the architecture, design patterns, full-stack implementation, 
+      runtime mechanics, database schemas, and viva voce defense strategies of Tekmira AI.
+    </div>
+    <div class="no-print" style="margin-top: 20px; display: flex; gap: 12px; align-items: center;">
+      <button onclick="window.print()" style="background-color: var(--primary); color: #FFFFFF; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 6px rgba(16,34,61,0.25);">
+        <span style="font-size: 15px;">🖨️</span> Print / Save to PDF (20+ Pages with Diagrams)
+      </button>
+      <span style="font-size: 12px; color: var(--muted);">Opens your browser print dialog with print-optimized pagination, page-breaks, and vector diagrams.</span>
     </div>
   </header>
 
-  <section>
+  <!-- ==================== TABLE OF CONTENTS ==================== -->
+  <div class="toc-box">
+    <h3 style="margin-top: 0; color: var(--primary); font-size: 15px;">Detailed Master Table of Contents</h3>
+    <div class="toc-grid">
+      <div class="toc-item"><strong>1.</strong> <a href="#sec-1">Executive Summary & The Placement Problem</a></div>
+      <div class="toc-item"><strong>2.</strong> <a href="#sec-2">The Core Solution: 3-Way Triangulation Engine</a></div>
+      <div class="toc-item"><strong>3.</strong> <a href="#sec-3">Day 1: Scaffolding, App/Server Decoupling & Docs</a></div>
+      <div class="toc-item"><strong>4.</strong> <a href="#sec-4">Day 2: Atomic UI Design System & Shell Architecture</a></div>
+      <div class="toc-item"><strong>5.</strong> <a href="#sec-5">Day 3: JavaScript Runtime Internals & Safe API Client</a></div>
+      <div class="toc-item"><strong>6.</strong> <a href="#sec-6">Day 4: PostgreSQL, Prisma ORM & SQL JOIN Layer</a></div>
+      <div class="toc-item"><strong>7.</strong> <a href="#sec-7">Day 5: MongoDB Document Database & Polyglot Persistence</a></div>
+      <div class="toc-item"><strong>8.</strong> <a href="#sec-8">Day 6: Bcrypt Cryptography & Stateless JWT Security</a></div>
+      <div class="toc-item"><strong>9.</strong> <a href="#sec-9">Day 7: REST API Standards, Zod Validation & Integration</a></div>
+      <div class="toc-item"><strong>10.</strong> <a href="#sec-10">Week 2 Detailed Engineering Roadmap (Days 8–14)</a></div>
+      <div class="toc-item"><strong>11.</strong> <a href="#sec-11">Week 3 Quality, Containerization & Release (Days 15–21)</a></div>
+      <div class="toc-item"><strong>12.</strong> <a href="#sec-12">Master Viva Voce & Technical Defense Cheat Sheet</a></div>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 1: EXECUTIVE SUMMARY ==================== -->
+  <section id="sec-1">
     <h2>1. Executive Summary & Problem Modeling</h2>
+    
+    <h3>1.1 The Campus Placement Crisis: The Resume Inflation Trap</h3>
     <p>
-      In technical campus placements, college graduates submit resumes claiming proficiencies in advanced frameworks, 
-      distributed databases, and high-concurrency architectures. However, recruiters encounter massive <strong>resume inflation</strong>:
-      candidates memorize buzzwords without writing real code, while keyword-matching ATS engines reward inflated claims over genuine coding capability.
+      In modern technical recruitment and college placement drives, candidates are evaluated almost exclusively on 
+      <strong>textual claims</strong> presented in resume PDFs. Due to the proliferation of keyword-stuffing templates 
+      and generative AI resume builders, technical resumes are experiencing massive inflation:
     </p>
+    <ul>
+      <li>Candidates claim proficiency in advanced systems (e.g., Docker, Kubernetes, Redis, Microservices, React, GraphQL) after only watching a tutorial or copying a boilerplate.</li>
+      <li>Traditional Applicant Tracking Systems (ATS) rely on superficial string-matching algorithms, rewarding candidates who stuff buzzwords while penalizing genuine software developers who describe real implementation trade-offs without marketing jargon.</li>
+      <li>Technical interviewers waste dozens of engineering hours conducting interviews only to discover candidates cannot explain or write fundamental code for the frameworks claimed on their resumes.</li>
+      <li>Students receive zero objective, empirical feedback regarding whether their actual written code matches hiring standards for specific campus roles.</li>
+    </ul>
+
     <div class="callout callout-coral">
-      <div class="callout-title">The 3-Way Triangulation Engine</div>
-      <p>Tekmira AI eliminates resume inflation by cross-verifying three independent sources of truth:</p>
-      <ul>
-        <li><strong>Self-Reported Claims (Input):</strong> Extracted from the candidate's resume (PDF).</li>
-        <li><strong>Empirical Code Evidence (Proof):</strong> Mined from the candidate's public GitHub repositories (authentic commits, AST language distribution, lines of code, test coverage).</li>
-        <li><strong>Objective Benchmarks (Standard):</strong> Ingested from real campus job descriptions (JDs).</li>
-      </ul>
+      <div class="callout-title">The Fundamental Defect of Existing AI Resume Screeners</div>
+      Evaluating a resume PDF using an LLM (such as raw ChatGPT or Claude) does not solve resume inflation; it <em>amplifies</em> it. 
+      An LLM processing a resume alone can only evaluate the <em>elegance of the claim</em>, not the <em>empirical truth of the implementation</em>. 
+      To establish objective truth, software evaluation requires <strong>deterministic multi-source cross-verification</strong>.
     </div>
   </section>
 
-  <section>
-    <h2>2. Complete Chronological Journey: Day 1 through Day 4</h2>
-
-    <!-- DAY 1 -->
-    <div class="day-card">
-      <div class="day-header">
-        <span class="day-title">Day 1 — Foundation, Scaffolding & Architecture</span>
-        <span class="commit-tag">commit b3ff54d (Synced with Remote)</span>
-      </div>
-      <p><strong>Primary Goal:</strong> Establish clean React/Vite client, Express backend, documentation baseline, and GitHub sync.</p>
-      <ul>
-        <li><strong>Decoupled Architecture:</strong> Completely separated <code>client/</code> (React 18 + Vite 6 + Tailwind) and <code>server/</code> (Node.js v22 + Express 4 ESM).</li>
-        <li><strong>The <code>app.js</code> vs <code>server.js</code> Pattern:</strong> <code>app.js</code> configures Express without calling <code>.listen()</code> to enable Supertest in-memory testing. <code>server.js</code> binds to <code>PORT=5000</code> and handles OS termination signals (<code>SIGTERM</code>, <code>SIGINT</code>).</li>
-        <li><strong>Living Specifications:</strong> Authored <code>PROJECT_RULES.md</code>, <code>docs/PRD.md</code>, <code>docs/HLD.md</code>, <code>docs/LLD.md</code>, and <code>docs/VIVA_PREP.md</code>.</li>
-        <li><strong>Git Baseline:</strong> Initialized local git on <code>main</code>, connected to GitHub remote, and pushed initial commit.</li>
-      </ul>
-    </div>
-
-    <!-- DAY 2 -->
-    <div class="day-card">
-      <div class="day-header">
-        <span class="day-title">Day 2 — Frontend Design System & Application Shell</span>
-        <span class="commit-tag">commit e2e83e7 (Synced with Remote)</span>
-      </div>
-      <p><strong>Primary Goal:</strong> Build candidate placement portal UI, atomic reusable component library, and responsive navigation.</p>
-      <ul>
-        <li><strong>Resolution of Scaffolding Placeholders:</strong> Replaced temporary Day 1 scaffolding cards (*"Architecture Readiness Check"*, *"Viva Preparation Tip"*, *"System Pipeline"*) with candidate-facing profile overviews, 3 core action cards, and triangulation skill matrices.</li>
-        <li><strong>Atomic UI Library (<code>client/src/components/common/</code>):</strong> Implemented <code>Button</code>, <code>Card</code>, <code>Input</code>, <code>Badge</code>, <code>PageHeader</code>, <code>LoadingIndicator</code>, <code>ErrorMessage</code>, and <code>EmptyState</code>.</li>
-        <li><strong>Shell & Navigation:</strong> <code>MainLayout</code> coordinating responsive Navbar with candidate profile menu, collapsible mobile Sidebar with 8 routes, and active route styling.</li>
-        <li><strong>Verification:</strong> Production Vite build verified (1,668 modules compiled in 7.62s with 0 errors).</li>
-      </ul>
-    </div>
-
-    <!-- DAY 3 -->
-    <div class="day-card">
-      <div class="day-header">
-        <span class="day-title">Day 3 — JavaScript Foundations & Safe API Error Normalization</span>
-        <span class="commit-tag">commit 71f7c73 (Synced with Remote)</span>
-      </div>
-      <p><strong>Primary Goal:</strong> Build centralized Axios HTTP client, teach core JavaScript concepts, and implement security-safe error sanitization.</p>
-      <ul>
-        <li><strong>JavaScript Academic Review:</strong> Documented Hoisting (TDZ), Closures, Event Loop execution hierarchy (Call Stack &rarr; Microtask Queue &rarr; Macrotask Queue), Promises vs Callbacks, and Async/Await concurrency.</li>
-        <li><strong>Reusable Axios Client (<code>apiClient.js</code>):</strong> Dynamic base URL from <code>VITE_API_BASE_URL</code>, 15-second timeout, JSON transforms, and auth token injection slot.</li>
-        <li><strong>Safe Error Normalization (<code>apiError.js</code>):</strong> <strong>Enterprise Security Rule:</strong> Catches 5xx server errors and strips database connection strings, passwords, and internal stack traces before displaying safe alerts to candidates.</li>
-        <li><strong>Unmount Safety with <code>AbortController</code>:</strong> Integrated cancellation in <code>BackendStatusBadge</code> and <code>DashboardPage</code> to prevent memory leaks and state updates on unmounted DOM trees.</li>
-        <li><strong>Automated Test Suite:</strong> Created and ran <code>testErrorMapping.js</code> (16 passed, 0 failed).</li>
-      </ul>
-    </div>
-
-    <!-- DAY 4 -->
-    <div class="day-card">
-      <div class="day-header">
-        <span class="day-title">Day 4 — PostgreSQL Relational Database, Prisma ORM & JOINs</span>
-        <span class="commit-tag">commit 4e256f1 (Committed Locally)</span>
-      </div>
-      <p><strong>Primary Goal:</strong> Model relational database entities in PostgreSQL using Prisma ORM, implement JOIN queries, and safe seed scripts.</p>
-      <ul>
-        <li><strong>Relational Schema (<code>schema.prisma</code>):</strong> <code>User</code> (UUID, roles, auth), <code>JobDescription</code> (benchmark campus roles), <code>SavedJob</code> (composite unique bookmark junction), and <code>JobApplication</code> (lifecycle status & match scores) with <code>onDelete: Cascade</code>.</li>
-        <li><strong>Prisma ORM Generation:</strong> Generated Prisma Client (v6.19.3) with full type-safety and automatic parameterized query injection prevention.</li>
-        <li><strong>Database Health & Safety:</strong> Implemented <code>checkDatabaseHealth()</code> with a safe <code>SELECT 1</code> ping that never leaks credentials or connection strings.</li>
-        <li><strong>Relational Service Layer:</strong> Created <code>jobApplicationService.js</code> implementing <code>INNER JOIN</code>, <code>LEFT JOIN ... WHERE IS NULL</code>, and aggregation queries.</li>
-        <li><strong>Automated Test Suite:</strong> Created and ran <code>testRelationalQueries.js</code> (8 passed, 0 failed).</li>
-      </ul>
-    </div>
-  </section>
-
-  <div class="page-break"></div>
-
-  <section>
-    <h2>3. Day 5 Preview: MongoDB Document Database Modeling</h2>
+  <!-- ==================== SECTION 2: 3-WAY TRIANGULATION ==================== -->
+  <section id="sec-2" class="page-break">
+    <h2>2. The Core Solution: The 3-Way Triangulation Engine</h2>
     <p>
-      Tekmira AI utilizes a <strong>Polyglot Persistence Architecture</strong>:
-      while PostgreSQL stores structured, relational business entities (users, job postings, applications), 
-      MongoDB stores polymorphic, deeply nested trees:
+      Tekmira AI replaces ungrounded claims with <strong>3-Way Empirical Triangulation</strong>. 
+      The platform reconciles three completely independent vectors of data before computing a candidate's 
+      <strong>Placement Readiness Index</strong>:
     </p>
+
+    <div class="card-grid">
+      <div class="card">
+        <h4 style="color: var(--primary);">1. Claimed Competency</h4>
+        <p style="color: var(--muted); font-size: 12px; margin-bottom: 6px;">Extracted from Candidate Resume PDFs</p>
+        <p style="font-size: 13px;">What the candidate claims they know. Mined via natural language stream parsing, identifying self-reported technical skills, libraries, tools, and reported project scopes.</p>
+      </div>
+      <div class="card">
+        <h4 style="color: var(--primary);">2. Empirical Proof</h4>
+        <p style="color: var(--muted); font-size: 12px; margin-bottom: 6px;">Mined from Public GitHub Repositories</p>
+        <p style="font-size: 13px;">What the candidate has actually built. Mined via Octokit REST API, extracting authentic commit histories, author verification, language AST distributions, package manifests, and test coverage.</p>
+      </div>
+      <div class="card">
+        <h4 style="color: var(--primary);">3. Industry Benchmark</h4>
+        <p style="color: var(--muted); font-size: 12px; margin-bottom: 6px;">Parsed from Real Campus Job Descriptions</p>
+        <p style="font-size: 13px;">What the job market requires. Normalized skills, required competencies, and minimum experience thresholds ingested from real campus hiring specifications.</p>
+      </div>
+    </div>
+
+    <!-- DIAGRAM 1: 3-WAY TRIANGULATION SVG -->
+    <div class="diagram-container">
+      <svg viewBox="0 0 860 340" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="shadow1" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+            <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#10223D" flood-opacity="0.08"/>
+          </filter>
+          <linearGradient id="gradNavy1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#10223D"/>
+            <stop offset="100%" stop-color="#203753"/>
+          </linearGradient>
+          <linearGradient id="gradCoral1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FF806F"/>
+            <stop offset="100%" stop-color="#E05B48"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Input 1: Resume PDF -->
+        <g filter="url(#shadow1)">
+          <rect x="40" y="30" width="220" height="70" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+          <rect x="40" y="30" width="8" height="70" rx="4" fill="#10223D"/>
+          <text x="60" y="60" font-family="Inter, sans-serif" font-size="14" font-weight="700" fill="#10223D">Vector 1: Resume PDF</text>
+          <text x="60" y="80" font-family="Inter, sans-serif" font-size="11" fill="#64748B">Claimed Skills & Self-Reported Scope</text>
+        </g>
+
+        <!-- Input 2: GitHub Repositories -->
+        <g filter="url(#shadow1)">
+          <rect x="40" y="135" width="220" height="70" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+          <rect x="40" y="135" width="8" height="70" rx="4" fill="#059669"/>
+          <text x="60" y="165" font-family="Inter, sans-serif" font-size="14" font-weight="700" fill="#10223D">Vector 2: GitHub Proof</text>
+          <text x="60" y="185" font-family="Inter, sans-serif" font-size="11" fill="#64748B">Authentic Commits, AST, Dependencies</text>
+        </g>
+
+        <!-- Input 3: Target Job Description -->
+        <g filter="url(#shadow1)">
+          <rect x="40" y="240" width="220" height="70" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+          <rect x="40" y="240" width="8" height="70" rx="4" fill="#D97706"/>
+          <text x="60" y="270" font-family="Inter, sans-serif" font-size="14" font-weight="700" fill="#10223D">Vector 3: Target JD</text>
+          <text x="60" y="290" font-family="Inter, sans-serif" font-size="11" fill="#64748B">Campus Requirements & Benchmarks</text>
+        </g>
+
+        <!-- Arrows into Central Engine -->
+        <path d="M 260 65 L 340 145" stroke="#10223D" stroke-width="2" stroke-dasharray="4" fill="none"/>
+        <path d="M 260 170 L 340 170" stroke="#059669" stroke-width="2" fill="none"/>
+        <path d="M 260 275 L 340 195" stroke="#D97706" stroke-width="2" stroke-dasharray="4" fill="none"/>
+
+        <!-- Central Engine Box -->
+        <g filter="url(#shadow1)">
+          <rect x="340" y="100" width="220" height="140" rx="12" fill="url(#gradNavy1)" stroke="#10223D"/>
+          <text x="450" y="135" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" font-weight="800" fill="#FFFFFF">Tekmira 3-Way Engine</text>
+          <text x="450" y="155" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#FF806F">Triangulation & Evidence Audit</text>
+          <line x1="360" y1="170" x2="540" y2="170" stroke="#334E68" stroke-width="1"/>
+          <text x="450" y="190" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#CBD5E1">• Deterministic Alias Matching</text>
+          <text x="450" y="208" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#CBD5E1">• Commit Author Verification</text>
+          <text x="450" y="226" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#CBD5E1">• Mathematical Weighting Model</text>
+        </g>
+
+        <!-- Arrows from Central Engine to Outputs -->
+        <path d="M 560 145 L 630 65" stroke="#10223D" stroke-width="2" fill="none"/>
+        <path d="M 560 170 L 630 170" stroke="#FF806F" stroke-width="2" fill="none"/>
+        <path d="M 560 195 L 630 275" stroke="#059669" stroke-width="2" fill="none"/>
+
+        <!-- Output 1: Readiness Index -->
+        <g filter="url(#shadow1)">
+          <rect x="630" y="30" width="200" height="70" rx="8" fill="#FFFFFF" stroke="#10223D" stroke-width="1.5"/>
+          <text x="650" y="58" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#10223D">Readiness Index (0–100)</text>
+          <text x="650" y="78" font-family="Inter, sans-serif" font-size="11" fill="#64748B">Objective Weighted Metric</text>
+        </g>
+
+        <!-- Output 2: Evidence Matrix -->
+        <g filter="url(#shadow1)">
+          <rect x="630" y="135" width="200" height="70" rx="8" fill="url(#gradCoral1)"/>
+          <text x="650" y="163" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF">Verified Evidence Matrix</text>
+          <text x="650" y="183" font-family="Inter, sans-serif" font-size="11" fill="#FFFFFF">Clickable File:Line Code Citations</text>
+        </g>
+
+        <!-- Output 3: Remediation Roadmap -->
+        <g filter="url(#shadow1)">
+          <rect x="630" y="240" width="200" height="70" rx="8" fill="#FFFFFF" stroke="#059669" stroke-width="1.5"/>
+          <text x="650" y="268" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#059669">Remediation Roadmap</text>
+          <text x="650" y="288" font-family="Inter, sans-serif" font-size="11" fill="#64748B">Actionable Code Repos to Build</text>
+        </g>
+      </svg>
+      <div class="diagram-caption">Figure 1.1: Tekmira AI 3-Way Triangulation Architecture</div>
+    </div>
+  </section>
+
+  <!-- ==================== SECTION 3: DAY 1 SCAFFOLDING ==================== -->
+  <section id="sec-3" class="page-break">
+    <h2>3. Day 1: Project Scaffolding, App/Server Decoupling & Documentation Baseline</h2>
+
+    <h3>3.1 The Architectural Separation of Concerns: Decoupled Full-Stack</h3>
+    <p>
+      On Day 1, the foundational engineering architecture of Tekmira AI was established with a 
+      <strong>strict decoupling policy</strong> between the client presentation layer and the backend API server.
+    </p>
+
     <table>
       <thead>
         <tr>
-          <th>Target Document Schema</th>
-          <th>Storage Strategy</th>
-          <th>Responsibility in Tekmira AI</th>
+          <th>Subsystem</th>
+          <th>Technology Stack</th>
+          <th>Execution Runtime</th>
+          <th>Operational Port</th>
+          <th>Architectural Role</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td><code>ResumeDocument</code></td>
-          <td>Embedded skills & projects</td>
-          <td>Raw parsed resume text, education array, candidate claims, and parser versioning.</td>
+          <td><strong>Client Layer</strong></td>
+          <td>React 18 + Vite 6 + Tailwind CSS 3</td>
+          <td>Browser DOM / Edge CDN</td>
+          <td><code>5173</code></td>
+          <td>Single Page Application (SPA), Client Routing, Atomic UI, State Management.</td>
         </tr>
         <tr>
-          <td><code>RepositorySnapshot</code></td>
-          <td>Embedded commits & languages</td>
-          <td>Mined public GitHub repositories, verified commits, lines-of-code distributions, and dependencies.</td>
+          <td><strong>Server Layer</strong></td>
+          <td>Node.js v22 + Express 4 (ESM)</td>
+          <td>V8 Engine / Process Supervisor</td>
+          <td><code>5000</code></td>
+          <td>Stateless REST API, JWT Auth, Database Access, Request Validation, Error Pipeline.</td>
         </tr>
         <tr>
-          <td><code>SkillAnalysisReport</code></td>
-          <td>Referenced User & Job IDs</td>
-          <td>Complete 3-way triangulation matrix, verified commit links, confidence scores, and remediation roadmap.</td>
+          <td><strong>Relational DB</strong></td>
+          <td>PostgreSQL + Prisma ORM 6.19</td>
+          <td>ACID Database Engine</td>
+          <td><code>5432</code></td>
+          <td>Identity Management, Passwords, Job Benchmarks, Application Records.</td>
+        </tr>
+        <tr>
+          <td><strong>Document DB</strong></td>
+          <td>MongoDB + Mongoose ODM 8.9</td>
+          <td>Distributed Document Store</td>
+          <td><code>27017</code></td>
+          <td>Parsed Resume ASTs, GitHub Tree Snapshots, Triangulation Analysis Reports.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>3.2 The Critical Architectural Pattern: app.js vs server.js</h3>
+    <p>
+      A frequent architectural blunder in junior Express applications is calling <code>app.listen()</code> 
+      inside the same file where middleware, routes, and error handlers are configured. Tekmira AI rigorously 
+      enforces the <strong>Decoupled Server Pattern</strong>:
+    </p>
+
+    <!-- DIAGRAM 2: APP.JS VS SERVER.JS SVG -->
+    <div class="diagram-container">
+      <svg viewBox="0 0 820 220" xmlns="http://www.w3.org/2000/svg">
+        <!-- app.js box -->
+        <rect x="40" y="30" width="340" height="160" rx="8" fill="#F8FAFC" stroke="#10223D" stroke-width="2"/>
+        <rect x="40" y="30" width="340" height="32" rx="8" fill="#10223D"/>
+        <text x="210" y="52" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF">server/src/app.js (Application Config)</text>
+        <text x="60" y="85" font-family="Inter, sans-serif" font-size="11.5" fill="#172033">• Configures express(), cors(), express.json()</text>
+        <text x="60" y="105" font-family="Inter, sans-serif" font-size="11.5" fill="#172033">• Mounts REST API Routes (/api/v1/...)</text>
+        <text x="60" y="125" font-family="Inter, sans-serif" font-size="11.5" fill="#172033">• Centralized Error Handling Middleware</text>
+        <text x="60" y="150" font-family="Inter, sans-serif" font-size="11.5" font-weight="600" fill="#059669">✓ Pure Middleware Pipeline (NO app.listen)</text>
+        <text x="60" y="170" font-family="Inter, sans-serif" font-size="11" fill="#64748B">Exports 'app' for Server & Automated Tests</text>
+
+        <!-- Arrow to Server.js -->
+        <path d="M 380 80 L 460 80" stroke="#10223D" stroke-width="2" fill="none"/>
+        <text x="420" y="72" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#64748B">imports</text>
+
+        <!-- Arrow to Supertest -->
+        <path d="M 380 140 L 460 140" stroke="#059669" stroke-width="2" fill="none"/>
+        <text x="420" y="132" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#059669">imports</text>
+
+        <!-- server.js box -->
+        <rect x="460" y="30" width="320" height="85" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+        <text x="480" y="55" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#10223D">server/src/server.js (Listener)</text>
+        <text x="480" y="75" font-family="Inter, sans-serif" font-size="11" fill="#172033">• Binds to physical PORT=5000</text>
+        <text x="480" y="95" font-family="Inter, sans-serif" font-size="11" fill="#64748B">• Attaches SIGTERM / SIGINT shutdown traps</text>
+
+        <!-- test harness box -->
+        <rect x="460" y="125" width="320" height="65" rx="8" fill="#ECFDF5" stroke="#059669" stroke-width="1.5"/>
+        <text x="480" y="148" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#059669">Supertest / Test Harness</text>
+        <text x="480" y="168" font-family="Inter, sans-serif" font-size="11" fill="#172033">• Tests routes in-memory with ZERO port collisions</text>
+      </svg>
+      <div class="diagram-caption">Figure 1.2: App vs Server Separation of Concerns</div>
+    </div>
+
+    <div class="callout callout-success">
+      <div class="callout-title">Viva Voce Defense: Why Separate app.js from server.js?</div>
+      If <code>app.listen()</code> is invoked in the same file where routes are declared, importing the app in automated 
+      test suites (such as Jest or Supertest) will attempt to bind to physical port 5000 during test execution. 
+      In continuous integration (CI) pipelines or parallel test runners, this causes immediate <code>EADDRINUSE: address already in use</code> 
+      crashes. By keeping <code>app.js</code> purely as an exported middleware pipeline, Supertest can inject simulated HTTP 
+      requests directly into the Express kernel in memory without requiring network binding.
+    </div>
+  </section>
+
+  <!-- ==================== SECTION 4: DAY 2 UI DESIGN SYSTEM ==================== -->
+  <section id="sec-4" class="page-break">
+    <h2>4. Day 2: Frontend Design System, Shell Architecture & Atomic Components</h2>
+
+    <h3>4.1 Resolution of Early Scaffolding Cards</h3>
+    <p>
+      On Day 2, all developer-facing scaffolding cards (such as <em>"Architecture Readiness Check"</em>, <em>"Viva Preparation Tip"</em>, 
+      and raw JSON dumps) were removed from the user interface. These were relocated to formal markdown documentation 
+      ([LLD.md](file:///docs/LLD.md) and [VIVA_PREP.md](file:///docs/VIVA_PREP.md)), transforming the frontend into a 
+      <strong>clean, candidate-facing placement portal</strong>.
+    </p>
+
+    <h3>4.2 Atomic UI Component Library (`client/src/components/common/`)</h3>
+    <p>
+      To prevent code duplication, enforce accessibility, and maintain brand consistency, Tekmira AI features an 
+      8-piece custom atomic component library:
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>File Location</th>
+          <th>Props & Variants</th>
+          <th>Accessibility & Defensive Features</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Button.jsx</code></td>
+          <td><code>client/src/components/common/Button.jsx</code></td>
+          <td><code>primary</code>, <code>secondary</code>, <code>outline</code>, <code>ghost</code>, <code>coral</code></td>
+          <td>Renders loading spinner, handles <code>disabled</code> state, suppresses clicks during loading, enforces visible focus rings.</td>
+        </tr>
+        <tr>
+          <td><code>Card.jsx</code></td>
+          <td><code>client/src/components/common/Card.jsx</code></td>
+          <td>Compound: <code>CardHeader</code>, <code>CardTitle</code>, <code>CardContent</code>, <code>CardFooter</code></td>
+          <td>Structured semantic container preventing CSS bleed; responsive padding; subtle border shadow matching brand tokens.</td>
+        </tr>
+        <tr>
+          <td><code>Input.jsx</code></td>
+          <td><code>client/src/components/common/Input.jsx</code></td>
+          <td>Controlled text/password/email input</td>
+          <td>Explicit label binding with <code>htmlFor</code>, inline validation error text, helper text slot, icon adornment slots.</td>
+        </tr>
+        <tr>
+          <td><code>Badge.jsx</code></td>
+          <td><code>client/src/components/common/Badge.jsx</code></td>
+          <td><code>neutral</code>, <code>success</code>, <code>warning</code>, <code>coral</code>, <code>navy</code></td>
+          <td>Semantic status badges for Placement Readiness and skill verification tags.</td>
+        </tr>
+        <tr>
+          <td><code>PageHeader.jsx</code></td>
+          <td><code>client/src/components/common/PageHeader.jsx</code></td>
+          <td><code>title</code>, <code>subtitle</code>, <code>actions</code></td>
+          <td>Standardized view header ensuring consistent typography, margin spacing, and action button positioning.</td>
+        </tr>
+        <tr>
+          <td><code>LoadingIndicator.jsx</code></td>
+          <td><code>client/src/components/common/LoadingIndicator.jsx</code></td>
+          <td><code>size</code>, <code>text</code></td>
+          <td>ARIA-compliant SVG spinner with <code>role="status"</code> and accessible off-screen text.</td>
+        </tr>
+        <tr>
+          <td><code>ErrorMessage.jsx</code></td>
+          <td><code>client/src/components/common/ErrorMessage.jsx</code></td>
+          <td><code>title</code>, <code>message</code>, <code>onRetry</code></td>
+          <td>Standard alert container displaying sanitized user errors and rendering an optional retry trigger button.</td>
+        </tr>
+        <tr>
+          <td><code>EmptyState.jsx</code></td>
+          <td><code>client/src/components/common/EmptyState.jsx</code></td>
+          <td><code>title</code>, <code>description</code>, <code>actionLabel</code></td>
+          <td>Zero-state illustration prompting candidates to connect GitHub or upload a resume; prevents blank white screens.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- DIAGRAM 3: ATOMIC COMPONENT HIERARCHY -->
+    <div class="diagram-container">
+      <svg viewBox="0 0 840 240" xmlns="http://www.w3.org/2000/svg">
+        <!-- MainLayout Shell -->
+        <rect x="30" y="20" width="780" height="200" rx="10" fill="#F8FAFC" stroke="#10223D" stroke-width="1.5" stroke-dasharray="6"/>
+        <text x="50" y="42" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#10223D">MainLayout.jsx (Master Responsive Shell)</text>
+
+        <!-- Navbar -->
+        <rect x="50" y="55" width="740" height="36" rx="6" fill="#10223D"/>
+        <text x="70" y="78" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">Navbar.jsx</text>
+        <text x="420" y="78" font-family="Inter, sans-serif" font-size="11" fill="#FF806F">Brand Logo & Tagline</text>
+        <text x="640" y="78" font-family="Inter, sans-serif" font-size="11" fill="#94A3B8">BackendStatusBadge | Profile</text>
+
+        <!-- Sidebar -->
+        <rect x="50" y="100" width="180" height="105" rx="6" fill="#203753"/>
+        <text x="65" y="122" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">Sidebar.jsx (8 Routes)</text>
+        <text x="65" y="140" font-family="Inter, sans-serif" font-size="10" fill="#CBD5E1">• Overview | Resume</text>
+        <text x="65" y="156" font-family="Inter, sans-serif" font-size="10" fill="#CBD5E1">• GitHub | Job Match</text>
+        <text x="65" y="172" font-family="Inter, sans-serif" font-size="10" fill="#CBD5E1">• Evidence | Interview</text>
+        <text x="65" y="188" font-family="Inter, sans-serif" font-size="10" fill="#CBD5E1">• Reports | Settings</text>
+
+        <!-- Page Content View -->
+        <rect x="245" y="100" width="545" height="105" rx="6" fill="#FFFFFF" stroke="#CBD5E1"/>
+        <text x="265" y="122" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#10223D">Active Page View (Dashboard, JobMatch, etc.)</text>
+        
+        <!-- Nested Atomic Components inside view -->
+        <rect x="265" y="135" width="160" height="55" rx="4" fill="#F1F5F9" stroke="#E2E8F0"/>
+        <text x="275" y="155" font-family="Inter, sans-serif" font-size="11" font-weight="600" fill="#10223D">Card.jsx (Compound)</text>
+        <text x="275" y="172" font-family="Inter, sans-serif" font-size="9" fill="#64748B">Header + Content + Footer</text>
+
+        <rect x="435" y="135" width="160" height="55" rx="4" fill="#F1F5F9" stroke="#E2E8F0"/>
+        <text x="445" y="155" font-family="Inter, sans-serif" font-size="11" font-weight="600" fill="#10223D">Input.jsx + Button.jsx</text>
+        <text x="445" y="172" font-family="Inter, sans-serif" font-size="9" fill="#64748B">Accessible Form Controls</text>
+
+        <rect x="605" y="135" width="170" height="55" rx="4" fill="#F1F5F9" stroke="#E2E8F0"/>
+        <text x="615" y="155" font-family="Inter, sans-serif" font-size="11" font-weight="600" fill="#10223D">Badge.jsx / Loading</text>
+        <text x="615" y="172" font-family="Inter, sans-serif" font-size="9" fill="#64748B">Semantic State Indicators</text>
+      </svg>
+      <div class="diagram-caption">Figure 1.3: Component Composition & Application Shell Hierarchy</div>
+    </div>
+  </section>
+
+  <!-- ==================== SECTION 5: DAY 3 JAVASCRIPT & API CLIENT ==================== -->
+  <section id="sec-5" class="page-break">
+    <h2>5. Day 3: JavaScript Core Foundations, Safe API Client & Defensive Error Handling</h2>
+
+    <h3>5.1 JavaScript Engine Fundamentals</h3>
+    <p>
+      On Day 3, we documented the critical V8 engine mechanics in [docs/VIVA_PREP.md](file:///docs/VIVA_PREP.md) 
+      and applied them directly into production code:
+    </p>
+
+    <h4>1. Hoisting & The Temporal Dead Zone (TDZ)</h4>
+    <p>
+      In JavaScript, variable declarations are processed during the <strong>Creation Phase</strong> of the Execution Context 
+      before any code runs. Variables declared with <code>var</code> are allocated in memory and initialized to <code>undefined</code>. 
+      Variables declared with <code>let</code> and <code>const</code> are also allocated in memory, but they remain 
+      <strong>uninitialized</strong>. The window between entering the scope and reaching the lexical declaration is the 
+      <strong>Temporal Dead Zone (TDZ)</strong>. Accessing a variable in the TDZ throws an immediate <code>ReferenceError</code>.
+    </p>
+
+    <h4>2. Closures in Token Management & Debounce</h4>
+    <p>
+      A closure is the combination of a function bundled together with references to its surrounding lexical environment. 
+      In Tekmira AI, closures are leveraged in <code>apiClient.js</code> to maintain private authentication state, and in 
+      input debouncing to prevent excessive API invocations when candidates type repository URLs.
+    </p>
+
+    <h4>3. The V8 Event Loop: Microtasks vs Macrotasks</h4>
+    <p>
+      The JavaScript single-threaded concurrency model manages asynchronous events through two distinct queues:
+    </p>
+    <ul>
+      <li><strong>Microtask Queue (Higher Priority):</strong> Holds callbacks from <code>Promise.then/catch/finally</code>, <code>await</code> continuations, and <code>queueMicrotask()</code>.</li>
+      <li><strong>Macrotask Queue (Lower Priority):</strong> Holds callbacks from <code>setTimeout</code>, <code>setInterval</code>, <code>setImmediate</code>, and I/O polling.</li>
+    </ul>
+
+    <!-- DIAGRAM 4: V8 EVENT LOOP ARCHITECTURE -->
+    <div class="diagram-container">
+      <svg viewBox="0 0 820 250" xmlns="http://www.w3.org/2000/svg">
+        <!-- Call Stack -->
+        <rect x="40" y="30" width="180" height="190" rx="8" fill="#FFFFFF" stroke="#10223D" stroke-width="2"/>
+        <text x="130" y="55" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#10223D">V8 Call Stack</text>
+        <text x="130" y="75" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#64748B">(Single Threaded - LIFO)</text>
+        <rect x="55" y="95" width="150" height="28" rx="4" fill="#F1F5F9" stroke="#CBD5E1"/>
+        <text x="130" y="113" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#172033">validateRequest()</text>
+        <rect x="55" y="130" width="150" height="28" rx="4" fill="#F1F5F9" stroke="#CBD5E1"/>
+        <text x="130" y="148" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#172033">authMiddleware()</text>
+        <rect x="55" y="165" width="150" height="28" rx="4" fill="#10223D"/>
+        <text x="130" y="183" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#FFFFFF">main() / global</text>
+
+        <!-- Arrow to Web APIs -->
+        <path d="M 220 80 L 300 80" stroke="#10223D" stroke-width="2" fill="none"/>
+        <text x="260" y="72" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#64748B">async ops</text>
+
+        <!-- Web APIs Box -->
+        <rect x="300" y="30" width="220" height="95" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+        <text x="410" y="55" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#10223D">Node APIs / libuv</text>
+        <text x="410" y="75" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#172033">• Network Fetch (Axios / HTTP)</text>
+        <text x="410" y="95" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#172033">• Timers (setTimeout) | File I/O</text>
+
+        <!-- Microtask Queue -->
+        <rect x="300" y="140" width="220" height="80" rx="8" fill="#ECFDF5" stroke="#059669" stroke-width="2"/>
+        <text x="410" y="162" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#059669">Microtask Queue (Priority 1)</text>
+        <text x="410" y="180" text-anchor="middle" font-family="Inter, sans-serif" font-size="10.5" fill="#172033">Promise callbacks (.then, async await)</text>
+        <text x="410" y="200" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="600" fill="#059669">★ EXHAUSTED COMPLETELY ON STACK CLEAR</text>
+
+        <!-- Macrotask Queue -->
+        <rect x="560" y="140" width="220" height="80" rx="8" fill="#FEF2F2" stroke="#DC2626" stroke-width="1.5"/>
+        <text x="670" y="162" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#DC2626">Macrotask Queue (Priority 2)</text>
+        <text x="670" y="180" text-anchor="middle" font-family="Inter, sans-serif" font-size="10.5" fill="#172033">setTimeout, setInterval, I/O callbacks</text>
+        <text x="670" y="200" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#64748B">One task executed per event loop tick</text>
+
+        <!-- Event loop cycle indicator -->
+        <path d="M 410 135 L 410 125" stroke="#059669" stroke-width="2" fill="none"/>
+        <path d="M 670 135 L 670 80 L 520 80" stroke="#DC2626" stroke-width="1.5" stroke-dasharray="4" fill="none"/>
+        <path d="M 300 180 L 220 180" stroke="#10223D" stroke-width="2" fill="none"/>
+      </svg>
+      <div class="diagram-caption">Figure 1.4: V8 Runtime Event Loop Priority Mechanics</div>
+    </div>
+
+    <h3>5.2 Sanitized Error Normalization (`client/src/utils/apiError.js`)</h3>
+    <p>
+      A major security risk in web development is leaking internal backend diagnostics (e.g., PostgreSQL credentials, 
+      stack traces, MongoDB connection strings) to client browsers. Tekmira AI implements 
+      <code>normalizeApiError()</code>, which maps all failures into 8 structured types and applies 
+      <strong>strict production credential masking</strong>:
+    </p>
+
+    <pre><code>// client/src/utils/apiError.js - Sanitized Error Normalization
+export function normalizeApiError(error) {
+  if (axios.isCancel(error)) {
+    return { type: 'REQUEST_CANCELLED', message: 'Request was cancelled.', status: 0 };
+  }
+  if (!error.response) {
+    return { type: 'NETWORK_ERROR', message: 'Unable to reach Tekmira server. Verify connection.', status: 0 };
+  }
+  const status = error.response.status;
+  if (status === 400) return { type: 'VALIDATION_ERROR', message: error.response.data.message, errors: error.response.data.errors, status };
+  if (status === 401) return { type: 'UNAUTHORIZED', message: 'Session expired. Please log in.', status };
+  if (status === 403) return { type: 'FORBIDDEN', message: 'Access denied.', status };
+  if (status === 404) return { type: 'NOT_FOUND', message: 'Requested resource not found.', status };
+  
+  // CRITICAL SECURITY RULE: Mask 500 errors to prevent credential leakage
+  return { 
+    type: 'SERVER_ERROR', 
+    message: 'An internal server error occurred. Our engineering team has been notified.', 
+    status: 500 
+  };
+}</code></pre>
+
+    <h3>5.3 Lifecycle Unmount Safety with `AbortController`</h3>
+    <p>
+      In React 18 Concurrent Mode, components may unmount while asynchronous HTTP network requests are in-flight. 
+      If a component updates state on an unmounted DOM node, memory leaks and stale UI flashes occur. 
+      Tekmira AI binds browser-native <code>AbortController</code> instances inside <code>useEffect</code> cleanups:
+    </p>
+
+    <pre><code>useEffect(() => {
+  const controller = new AbortController();
+  
+  async function fetchBackendHealth() {
+    try {
+      const res = await apiClient.get('/health', { signal: controller.signal });
+      setStatus(res.data.status);
+    } catch (err) {
+      if (!axios.isCancel(err)) setStatus('error');
+    }
+  }
+  fetchBackendHealth();
+
+  // Cleanup: Terminate in-flight network request on unmount
+  return () => controller.abort();
+}, []);</code></pre>
+  </section>
+
+  <!-- ==================== SECTION 6: DAY 4 POSTGRESQL & PRISMA ==================== -->
+  <section id="sec-6" class="page-break">
+    <h2>6. Day 4: PostgreSQL Relational Database, Prisma ORM & SQL JOIN Layer</h2>
+
+    <h3>6.1 Relational Schema Architecture (`server/prisma/schema.prisma`)</h3>
+    <p>
+      Tekmira AI stores core transactional entities, authentication identities, and campus job benchmarks in 
+      PostgreSQL to guarantee <strong>ACID transactional integrity</strong> and referential constraints:
+    </p>
+
+    <!-- DIAGRAM 5: RELATIONAL ERD SVG -->
+    <div class="diagram-container">
+      <svg viewBox="0 0 840 260" xmlns="http://www.w3.org/2000/svg">
+        <!-- USER Table -->
+        <rect x="30" y="30" width="220" height="200" rx="8" fill="#FFFFFF" stroke="#10223D" stroke-width="2"/>
+        <rect x="30" y="30" width="220" height="32" rx="8" fill="#10223D"/>
+        <text x="140" y="52" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF">User (Relational)</text>
+        <text x="45" y="80" font-family="JetBrains Mono, monospace" font-size="11" fill="#10223D">PK id: UUID</text>
+        <text x="45" y="100" font-family="JetBrains Mono, monospace" font-size="11" fill="#10223D">UQ email: String</text>
+        <text x="45" y="120" font-family="JetBrains Mono, monospace" font-size="11" fill="#10223D">   passwordHash: String</text>
+        <text x="45" y="140" font-family="JetBrains Mono, monospace" font-size="11" fill="#10223D">   role: Role (Enum)</text>
+        <text x="45" y="160" font-family="JetBrains Mono, monospace" font-size="11" fill="#10223D">   fullName: String</text>
+        <text x="45" y="180" font-family="JetBrains Mono, monospace" font-size="11" fill="#64748B">   createdAt: DateTime</text>
+        <text x="45" y="200" font-family="JetBrains Mono, monospace" font-size="11" fill="#64748B">   updatedAt: DateTime</text>
+
+        <!-- 1:N relationship line to Applications -->
+        <path d="M 250 110 L 330 110" stroke="#10223D" stroke-width="2" fill="none"/>
+        <text x="290" y="102" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#10223D">1 : N</text>
+
+        <!-- JOB_APPLICATION Table -->
+        <rect x="330" y="30" width="240" height="200" rx="8" fill="#FFFFFF" stroke="#059669" stroke-width="2"/>
+        <rect x="330" y="30" width="240" height="32" rx="8" fill="#059669"/>
+        <text x="450" y="52" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF">JobApplication (Junction)</text>
+        <text x="345" y="80" font-family="JetBrains Mono, monospace" font-size="11" fill="#059669">PK id: UUID</text>
+        <text x="345" y="100" font-family="JetBrains Mono, monospace" font-size="11" fill="#10223D">FK userId: UUID</text>
+        <text x="345" y="120" font-family="JetBrains Mono, monospace" font-size="11" fill="#10223D">FK jobId: UUID</text>
+        <text x="345" y="140" font-family="JetBrains Mono, monospace" font-size="11" fill="#10223D">   status: AppStatus</text>
+        <text x="345" y="160" font-family="JetBrains Mono, monospace" font-size="11" fill="#10223D">   matchScore: Float</text>
+        <text x="345" y="180" font-family="JetBrains Mono, monospace" font-size="11" fill="#64748B">   appliedAt: DateTime</text>
+        <text x="345" y="205" font-family="Inter, sans-serif" font-size="10" font-weight="600" fill="#DC2626">CASCADE on User Delete</text>
+
+        <!-- N:1 relationship line to JobDescription -->
+        <path d="M 570 110 L 630 110" stroke="#10223D" stroke-width="2" fill="none"/>
+        <text x="600" y="102" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#10223D">N : 1</text>
+
+        <!-- JOB_DESCRIPTION Table -->
+        <rect x="630" y="30" width="180" height="200" rx="8" fill="#FFFFFF" stroke="#D97706" stroke-width="2"/>
+        <rect x="630" y="30" width="180" height="32" rx="8" fill="#D97706"/>
+        <text x="720" y="52" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF">JobDescription</text>
+        <text x="645" y="80" font-family="JetBrains Mono, monospace" font-size="11" fill="#D97706">PK id: UUID</text>
+        <text x="645" y="100" font-family="JetBrains Mono, monospace" font-size="11" fill="#10223D">   title: String</text>
+        <text x="645" y="120" font-family="JetBrains Mono, monospace" font-size="11" fill="#10223D">   company: String</text>
+        <text x="645" y="140" font-family="JetBrains Mono, monospace" font-size="11" fill="#10223D">   skills: String[]</text>
+        <text x="645" y="160" font-family="JetBrains Mono, monospace" font-size="11" fill="#10223D">   minExp: Int</text>
+        <text x="645" y="180" font-family="JetBrains Mono, monospace" font-size="11" fill="#64748B">   createdAt: DateTime</text>
+      </svg>
+      <div class="diagram-caption">Figure 1.5: PostgreSQL Entity-Relationship Model (Prisma)</div>
+    </div>
+
+    <h3>6.2 Relational Query Service: SQL JOIN Equivalents</h3>
+    <p>
+      In [`server/src/services/jobApplicationService.js`](file:///server/src/services/jobApplicationService.js), 
+      we implemented explicit SQL JOIN equivalents using Prisma ORM:
+    </p>
+    <ul>
+      <li><strong>INNER JOIN Equivalent:</strong> Queries <code>jobApplication.findMany()</code> with <code>include: { user: true, job: true }</code>. Only returns applications where both the user identity and the benchmark job record exist.</li>
+      <li><strong>LEFT JOIN ... WHERE NULL Equivalent:</strong> Identifies registered candidates who have never submitted an application by querying <code>user.findMany()</code> with <code>where: { applications: { none: {} } }</code>.</li>
+      <li><strong>Aggregation Queries:</strong> Calculates average candidate match score and application status counts grouped by target company.</li>
+    </ul>
+
+    <div class="callout callout-warning">
+      <div class="callout-title">SQL Injection Prevention Mechanics</div>
+      Prisma completely neutralizes SQL Injection vulnerabilities because it converts all application queries into 
+      <strong>parameterized SQL statements</strong> (using placeholders <code>$1, $2, $3</code>). User-supplied inputs 
+      are never concatenated directly into the SQL string; the database engine treats them strictly as literal parameter values.
+    </div>
+  </section>
+
+  <!-- ==================== SECTION 7: DAY 5 MONGODB & POLYGLOT PERSISTENCE ==================== -->
+  <section id="sec-7" class="page-break">
+    <h2>7. Day 5: MongoDB Document Database Foundation & Polyglot Persistence</h2>
+
+    <h3>7.1 The Polyglot Persistence Rationale</h3>
+    <p>
+      Modern enterprise architectures avoid the "one-size-fits-all" database anti-pattern. 
+      Tekmira AI pairs PostgreSQL with MongoDB:
+    </p>
+
+    <!-- DIAGRAM 6: POLYGLOT PERSISTENCE DATA SPLIT -->
+    <div class="diagram-container">
+      <svg viewBox="0 0 820 220" xmlns="http://www.w3.org/2000/svg">
+        <!-- Client / Controller Layer -->
+        <rect x="30" y="80" width="180" height="70" rx="8" fill="#10223D"/>
+        <text x="120" y="112" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF">Application Service</text>
+        <text x="120" y="132" text-anchor="middle" font-family="Inter, sans-serif" font-size="10.5" fill="#FF806F">Polyglot Router</text>
+
+        <!-- Route to Postgres -->
+        <path d="M 210 100 L 320 60" stroke="#10223D" stroke-width="2" fill="none"/>
+        <text x="260" y="70" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#10223D">Relational Query</text>
+
+        <!-- Route to Mongo -->
+        <path d="M 210 130 L 320 170" stroke="#059669" stroke-width="2" fill="none"/>
+        <text x="260" y="160" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#059669">Document Query</text>
+
+        <!-- PostgreSQL Box -->
+        <rect x="320" y="25" width="460" height="75" rx="8" fill="#FFFFFF" stroke="#10223D" stroke-width="2"/>
+        <text x="340" y="50" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#10223D">PostgreSQL (Relational Storage via Prisma)</text>
+        <text x="340" y="70" font-family="Inter, sans-serif" font-size="11" fill="#172033">• Strictly Structured: Users, Password Hashes, Roles, Job Postings, Saved Jobs</text>
+        <text x="340" y="88" font-family="Inter, sans-serif" font-size="11" fill="#64748B">• Guarantees: ACID Transactions, Foreign Keys, Referential Integrity, Unique Constraints</text>
+
+        <!-- MongoDB Box -->
+        <rect x="320" y="130" width="460" height="75" rx="8" fill="#F0FDF4" stroke="#059669" stroke-width="2"/>
+        <text x="340" y="155" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#059669">MongoDB (Document Store via Mongoose)</text>
+        <text x="340" y="175" font-family="Inter, sans-serif" font-size="11" fill="#172033">• Semi-Structured Polymorphic Documents: Resume ASTs, GitHub Tree Snapshots</text>
+        <text x="340" y="193" font-family="Inter, sans-serif" font-size="11" fill="#64748B">• Guarantees: Dynamic JSON Payloads, Deeply Nested Arrays, Rapid Schema Evolution</text>
+      </svg>
+      <div class="diagram-caption">Figure 1.6: Polyglot Persistence Division in Tekmira AI</div>
+    </div>
+
+    <h3>7.2 Mongoose Schemas (`server/src/models/`)</h3>
+    <ul>
+      <li>
+        <strong>`ResumeDocument.js` (`resume_documents`):</strong> Stores parsed resume text, candidate identification, 
+        and structured claims extracted from PDFs (skills, work history, projects). 
+        Indexes: <code>{ candidateId: 1, createdAt: -1 }</code>.
+      </li>
+      <li>
+        <strong>`RepositorySnapshot.js` (`repository_snapshots`):</strong> Stores mined public GitHub repositories. 
+        Maintains AST language distribution maps (e.g. <code>{ "JavaScript": 65000, "TypeScript": 42000 }</code>) 
+        and authentic commit metrics (author email verification, insertions, deletions).
+      </li>
+      <li>
+        <strong>`SkillAnalysisReport.js` (`skill_analysis_reports`):</strong> Stores the synthesized 3-way triangulation evaluation. 
+        Each demonstrated competency is assigned an explainable <code>verificationStatus</code> enum:
+        <ul>
+          <li><code>VERIFIED</code>: Claimed on resume AND substantiated by real GitHub commits.</li>
+          <li><code>INFLATED_CLAIM</code>: Claimed on resume but ZERO matching code proof found in GitHub.</li>
+          <li><code>UNCLAIMED_STRENGTH</code>: Substantial code proof found in GitHub but omitted from resume.</li>
+          <li><code>MISSING_CRITICAL</code>: Required by target campus job description but missing from both.</li>
+        </ul>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ==================== SECTION 8: DAY 6 AUTHENTICATION ==================== -->
+  <section id="sec-8" class="page-break">
+    <h2>8. Day 6: Authentication & Middleware Security (Bcrypt + JWT)</h2>
+
+    <h3>8.1 Password Hashing Mechanics with Bcrypt</h3>
+    <p>
+      Passwords are never stored in plaintext. In [`server/src/services/authService.js`](file:///server/src/services/authService.js), 
+      passwords undergo cryptographic adaptive hashing via <code>bcryptjs</code> with <strong>10 salt rounds</strong>:
+    </p>
+
+    <!-- DIAGRAM 7: BCRYPT CRYPTOGRAPHY -->
+    <div class="diagram-container">
+      <svg viewBox="0 0 820 180" xmlns="http://www.w3.org/2000/svg">
+        <!-- Plaintext Password Box -->
+        <rect x="30" y="55" width="180" height="60" rx="8" fill="#FEF2F2" stroke="#DC2626" stroke-width="1.5"/>
+        <text x="120" y="80" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#DC2626">Plaintext Password</text>
+        <text x="120" y="100" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#172033">"CandidatePass@2026"</text>
+
+        <!-- Plus Salt -->
+        <text x="230" y="90" font-family="Inter, sans-serif" font-size="20" font-weight="700" fill="#10223D">+</text>
+
+        <!-- 10 Round Salt Box -->
+        <rect x="260" y="55" width="180" height="60" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+        <text x="350" y="80" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#10223D">10-Round Salt</text>
+        <text x="350" y="100" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="#64748B">$2a$10$e8T1X... (Random)</text>
+
+        <!-- Arrow through Hash Function -->
+        <path d="M 445 85 L 535 85" stroke="#10223D" stroke-width="2" fill="none"/>
+        <text x="490" y="75" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#10223D">Blowfish 2^10</text>
+
+        <!-- Output Hash Box -->
+        <rect x="540" y="45" width="250" height="80" rx="8" fill="#ECFDF5" stroke="#059669" stroke-width="2"/>
+        <text x="665" y="70" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#059669">Stored 60-Char Bcrypt Hash</text>
+        <text x="665" y="92" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#10223D">$2a$10$N9qo8uLOickgx2ZMRZoMye...</text>
+        <text x="665" y="112" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="600" fill="#059669">★ Neutralizes Rainbow Tables</text>
+      </svg>
+      <div class="diagram-caption">Figure 1.7: Cryptographic Password Hashing Lifecycle</div>
+    </div>
+
+    <h3>8.2 Stateless JWT Architecture & Role-Based Access Control (RBAC)</h3>
+    <p>
+      Tekmira AI relies on stateless <strong>JSON Web Tokens (JWT)</strong> signed using <code>HS256</code> (HMAC with SHA-256):
+    </p>
+    <ul>
+      <li><strong>Payload:</strong> Encodes user identification (<code>id</code>), email (<code>email</code>), and authorization tier (<code>role: 'CANDIDATE' | 'ADMIN'</code>).</li>
+      <li><strong>`authenticate` Middleware:</strong> Extracts the <code>Authorization: Bearer &lt;token&gt;</code> header. If missing, malformed, or expired, halts with HTTP 401 Unauthorized. Attaches safe <code>req.user</code>.</li>
+      <li><strong>`authorizeRoles(...roles)` Middleware:</strong> Inspects <code>req.user.role</code>. If the candidate lacks clearance, halts with HTTP 403 Forbidden.</li>
+      <li><strong>Sanitization:</strong> <code>AuthService.sanitizeUser()</code> explicitly deletes <code>passwordHash</code> from returned objects.</li>
+    </ul>
+  </section>
+
+  <!-- ==================== SECTION 9: DAY 7 REST API ARCHITECTURE ==================== -->
+  <section id="sec-9" class="page-break">
+    <h2>9. Day 7: REST API Standards, Zod Validation & Full-Stack Integration</h2>
+
+    <h3>9.1 Runtime Request Validation with Zod (`validate.js`)</h3>
+    <p>
+      TypeScript or JavaScript types only exist during development. In production, HTTP requests deliver arbitrary 
+      JSON payloads. Tekmira AI establishes a <strong>strict runtime validation boundary</strong> using Zod schemas 
+      ([`authValidation.js`](file:///server/src/validations/authValidation.js), [`analysisValidation.js`](file:///server/src/validations/analysisValidation.js)):
+    </p>
+
+    <!-- DIAGRAM 8: REST LIFECYCLE & VALIDATION SVG -->
+    <div class="diagram-container">
+      <svg viewBox="0 0 840 220" xmlns="http://www.w3.org/2000/svg">
+        <!-- Client -->
+        <rect x="30" y="85" width="110" height="50" rx="6" fill="#10223D"/>
+        <text x="85" y="115" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">Client Request</text>
+
+        <!-- Arrow 1 -->
+        <path d="M 140 110 L 180 110" stroke="#10223D" stroke-width="2" fill="none"/>
+
+        <!-- CORS & JSON -->
+        <rect x="180" y="70" width="120" height="80" rx="6" fill="#F8FAFC" stroke="#CBD5E1"/>
+        <text x="240" y="100" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="600" fill="#10223D">cors()</text>
+        <text x="240" y="125" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="600" fill="#10223D">express.json()</text>
+
+        <!-- Arrow 2 -->
+        <path d="M 300 110 L 340 110" stroke="#10223D" stroke-width="2" fill="none"/>
+
+        <!-- Zod Validation Middleware -->
+        <rect x="340" y="60" width="140" height="100" rx="6" fill="#FFF0EE" stroke="#FF806F" stroke-width="2"/>
+        <text x="410" y="90" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#C2410C">validate(schema)</text>
+        <text x="410" y="115" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#172033">Zod Runtime Check</text>
+        <text x="410" y="135" text-anchor="middle" font-family="Inter, sans-serif" font-size="9.5" fill="#DC2626">400 Bad Request on Error</text>
+
+        <!-- Arrow 3 -->
+        <path d="M 480 110 L 520 110" stroke="#059669" stroke-width="2" fill="none"/>
+        <text x="500" y="102" text-anchor="middle" font-family="Inter, sans-serif" font-size="9" fill="#059669">passed</text>
+
+        <!-- Auth Middleware -->
+        <rect x="520" y="70" width="120" height="80" rx="6" fill="#ECFDF5" stroke="#059669"/>
+        <text x="580" y="100" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="600" fill="#059669">authenticate</text>
+        <text x="580" y="125" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#64748B">Verify JWT Bearer</text>
+
+        <!-- Arrow 4 -->
+        <path d="M 640 110 L 680 110" stroke="#10223D" stroke-width="2" fill="none"/>
+
+        <!-- Controller & DB -->
+        <rect x="680" y="60" width="130" height="100" rx="6" fill="#10223D"/>
+        <text x="745" y="95" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">Route Controller</text>
+        <text x="745" y="120" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#CBD5E1">Service Layer</text>
+        <text x="745" y="140" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#FF806F">Postgres / Mongo</text>
+      </svg>
+      <div class="diagram-caption">Figure 1.8: Request-Response Lifecycle & Validation Middleware Pipeline</div>
+    </div>
+
+    <h3>9.2 Centralized Error Handler Status Translation</h3>
+    <p>
+      The centralized error middleware in [`server/src/middleware/errorHandler.js`](file:///server/src/middleware/errorHandler.js) 
+      acts as the ultimate system safety net, translating raw database exceptions into standardized HTTP responses:
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Internal Exception</th>
+          <th>Source Engine</th>
+          <th>Mapped HTTP Status</th>
+          <th>Sanitized Client JSON Message</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>PrismaClientKnownRequestError (P2002)</code></td>
+          <td>PostgreSQL / Prisma</td>
+          <td><code>409 Conflict</code></td>
+          <td><code>"A record with this unique value already exists."</code></td>
+        </tr>
+        <tr>
+          <td><code>CastError (Invalid ObjectId)</code></td>
+          <td>MongoDB / Mongoose</td>
+          <td><code>400 Bad Request</code></td>
+          <td><code>"Invalid resource identifier format."</code></td>
+        </tr>
+        <tr>
+          <td><code>ZodError</code></td>
+          <td>Zod Runtime Schema</td>
+          <td><code>400 Bad Request</code></td>
+          <td><code>"Validation error: [field-level issue array]"</code></td>
+        </tr>
+        <tr>
+          <td><code>TokenExpiredError</code></td>
+          <td>jsonwebtoken</td>
+          <td><code>401 Unauthorized</code></td>
+          <td><code>"Token expired. Please re-authenticate."</code></td>
+        </tr>
+        <tr>
+          <td>Unhandled Generic Exception</td>
+          <td>Node.js Runtime</td>
+          <td><code>500 Internal Error</code></td>
+          <td><code>"An internal server error occurred."</code> <em>(Stack traces hidden)</em></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>9.3 Frontend Full-Stack Integration</h3>
+    <p>
+      On Day 7, the frontend user interface was connected to live backend REST endpoints:
+    </p>
+    <ul>
+      <li><strong>`LoginPage.jsx` & `RegisterPage.jsx`:</strong> Wired to <code>authService.login()</code> and <code>authService.register()</code>, managing JWT storage in <code>localStorage</code>, displaying inline field validation errors, and redirecting authenticated candidates to <code>/dashboard</code>.</li>
+      <li><strong>`JobMatchPage.jsx`:</strong> Connected to <code>jobService.getJobRoles()</code>, rendering real campus benchmark positions with graceful offline fallbacks and <code>AbortController</code> lifecycle safety.</li>
+    </ul>
+  </section>
+
+  <!-- ==================== SECTION 10: WEEK 2 ROADMAP ==================== -->
+  <section id="sec-10" class="page-break">
+    <h2>10. Week 2 Detailed Roadmap: AI & Evidence Extraction Engine (Days 8–14)</h2>
+    <p>
+      With the Week 1 architecture 100% operational, Week 2 builds the core AI analysis capabilities:
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Day</th>
+          <th>Target Milestone</th>
+          <th>Core Technical Concepts</th>
+          <th>Key Prompts & Implementation Deliverables</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Day 8</strong></td>
+          <td>Gemini API Integration</td>
+          <td><code>@google/genai</code> SDK, <code>GEMINI_API_KEY</code>, Rate Limits</td>
+          <td>Create singleton Gemini service; implement <code>POST /api/ai/analyze-resume</code>; wire frontend sample workflow; mock API responses in unit tests.</td>
+        </tr>
+        <tr>
+          <td><strong>Day 9</strong></td>
+          <td>Prompt Engineering & Structured Outputs</td>
+          <td>System instructions, <code>responseSchema</code>, Anti-Hallucination</td>
+          <td>Standardized prompt templates; enforce Zod schemas for extracted skills; test adversarial prompt injection defenses; zero invented evidence.</td>
+        </tr>
+        <tr>
+          <td><strong>Day 10</strong></td>
+          <td>Resume Upload & PDF Text Parsing</td>
+          <td>Multer streaming, Magic Byte signatures, <code>pdf-parse</code></td>
+          <td>5MB upload limit; MIME validation; extract raw text streams; persist <code>ResumeDocument</code> in MongoDB linked to authenticated candidate.</td>
+        </tr>
+        <tr>
+          <td><strong>Day 11</strong></td>
+          <td>GitHub REST API Mining</td>
+          <td>Octokit, Git Tree traversal, Rate Limit caching</td>
+          <td>Sanitize repo URLs; verify author email on commits; extract language AST percentages; persist <code>RepositorySnapshot</code> in MongoDB; handle 60 req/hr limits.</td>
+        </tr>
+        <tr>
+          <td><strong>Day 12</strong></td>
+          <td>Skill Evidence Matching Engine</td>
+          <td>3-Way Triangulation, Deterministic scoring, Aliasing</td>
+          <td>Build deterministic matching algorithm (Claimed vs Demonstrated vs Required); Gemini contextual reasoning; calculate Placement Readiness Index.</td>
+        </tr>
+        <tr>
+          <td><strong>Day 13</strong></td>
+          <td>Analysis Dashboard Integration</td>
+          <td>React composition, Async UI states, Code Proof Links</td>
+          <td>Render Placement Readiness gauge, Claimed vs Verified matrix, clickable GitHub source citations, and robust empty/loading/error states.</td>
+        </tr>
+        <tr>
+          <td><strong>Day 14</strong></td>
+          <td>AI Interview Preparation</td>
+          <td>Grounded viva questions, Rubrics, Evaluation</td>
+          <td>Generate project-grounded viva questions referencing candidate's real files; student answer evaluation against rubric; persist sessions in MongoDB.</td>
         </tr>
       </tbody>
     </table>
   </section>
 
-  <section>
-    <h2>4. Master Viva Voce & Technical Defense Cheat Sheet</h2>
+  <!-- ==================== SECTION 11: WEEK 3 ROADMAP ==================== -->
+  <section id="sec-11" class="page-break">
+    <h2>11. Week 3 Detailed Roadmap: Quality, Security & Release Engineering (Days 15–21)</h2>
+    <p>
+      Week 3 delivers enterprise hardening, containerization, production deployment, and project assessor defense preparation:
+    </p>
+
     <table>
       <thead>
         <tr>
-          <th style="width: 30%;">Question</th>
-          <th style="width: 25%;">Examiner's Focus</th>
-          <th style="width: 45%;">Bulletproof Answer</th>
+          <th>Day</th>
+          <th>Target Milestone</th>
+          <th>Core Technical Concepts</th>
+          <th>Key Prompts & Implementation Deliverables</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td><strong>Why not just evaluate resumes with ChatGPT or Gemini?</strong></td>
-          <td>Architecture & Hallucination Prevention</td>
-          <td>LLMs evaluating only a resume judge <em>claims</em>, not <em>evidence</em>. This rewards resume inflation and causes hallucination. Tekmira AI grounds evaluation by cross-verifying resume claims against empirical GitHub commit code and objective job requirements.</td>
+          <td><strong>Day 15</strong></td>
+          <td>Controlled Forms & Validation Boundary</td>
+          <td>Controlled inputs, <code>aria-*</code> accessibility, Double-submit defense</td>
+          <td>Audit all forms; add client-side inline feedback; enforce server-side Zod security boundary; test whitespace, boundary lengths, and injection payloads.</td>
+        </tr>
+        <tr>
+          <td><strong>Day 16</strong></td>
+          <td>Automated API & Unit Testing</td>
+          <td>Jest/Vitest, Supertest, Test fixtures, Mocking</td>
+          <td>Configure Supertest against decoupled <code>app.js</code>; unit test deterministic scoring algorithms; integration test all protected REST routes with isolated mocks.</td>
+        </tr>
+        <tr>
+          <td><strong>Day 17</strong></td>
+          <td>Docker Containerization</td>
+          <td>Multi-stage Dockerfiles, Docker Compose, Volumes</td>
+          <td>Containerize client (Nginx alpine) and server (Node.js alpine); configure <code>docker-compose.yml</code> with PostgreSQL & MongoDB persistent volumes and internal bridge networking.</td>
+        </tr>
+        <tr>
+          <td><strong>Day 18</strong></td>
+          <td>MongoDB Aggregation & Query Optimization</td>
+          <td><code>$match</code>, <code>$group</code>, <code>$project</code>, <code>$unwind</code>, Indexes</td>
+          <td>Build cohort analytics queries; profile query execution with <code>explain("executionStats")</code>; add compound indexes on high-cardinality keys.</td>
+        </tr>
+        <tr>
+          <td><strong>Day 19</strong></td>
+          <td>Production Cloud Deployment</td>
+          <td>Vercel, Render/Railway, Neon Postgres, Atlas Mongo</td>
+          <td>Deploy client to Vercel/Netlify; deploy API to Render/Railway; connect cloud managed databases; configure production CORS and HTTPS security headers.</td>
+        </tr>
+        <tr>
+          <td><strong>Day 20</strong></td>
+          <td>Security, Reliability & Responsive Audit</td>
+          <td>OWASP Top 10, Threat Modeling, Prompt Injection Defense</td>
+          <td>Audit server-side resource ownership; rate limiting; audit responsive layouts from 320px mobile to 4K desktop; produce threat model in <code>docs/SECURITY.md</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>Day 21</strong></td>
+          <td>Documentation & Viva Defense Readiness</td>
+          <td>Concept Evidence Mapping, Viva Voce Simulator</td>
+          <td>Author <code>docs/CONCEPT_EVIDENCE.md</code> linking every rubric concept to source code; conduct viva defense practice; clean Git release tag.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ==================== SECTION 12: MASTER VIVA DEFENSE ==================== -->
+  <section id="sec-12" class="page-break">
+    <h2>12. Master Viva Voce & Technical Defense Cheat Sheet</h2>
+    <p>
+      Essential academic questions, architectural rationales, and defense points for examiners and project assessors:
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 25%;">Examiner Question</th>
+          <th style="width: 25%;">Academic Focus</th>
+          <th style="width: 50%;">Authoritative Technical Defense</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Why not just evaluate resumes with ChatGPT or Gemini directly?</strong></td>
+          <td>AI Architecture & Hallucination Prevention</td>
+          <td>LLMs evaluating only a resume evaluate <em>claims</em>, not <em>evidence</em>. This rewards resume inflation and causes severe hallucination. Tekmira AI grounds evaluation by cross-verifying resume claims against empirical GitHub commit code and objective job benchmarks.</td>
         </tr>
         <tr>
           <td><strong>Why separate <code>app.js</code> from <code>server.js</code>?</strong></td>
           <td>Separation of Concerns & Automated Testing</td>
-          <td><code>app.js</code> configures middleware and routes without binding to a physical network port, allowing automated testing libraries (Supertest) to test endpoints in-memory. <code>server.js</code> binds to the physical port and manages OS process termination signals.</td>
+          <td><code>app.js</code> configures middleware and routes without binding to a physical network port, allowing automated testing libraries (Supertest) to test endpoints in-memory without <code>EADDRINUSE</code> port collisions. <code>server.js</code> manages process listening and graceful OS shutdown signals.</td>
         </tr>
         <tr>
           <td><strong>Why use UUIDs instead of auto-incrementing integers?</strong></td>
           <td>Database Security & Privacy</td>
-          <td>Sequential IDs (1, 2, 3...) are vulnerable to enumeration attacks where unauthorized users guess other candidate profiles. UUIDv4 provides 128-bit globally unique, unguessable identifiers.</td>
+          <td>Sequential IDs (1, 2, 3...) are vulnerable to <strong>enumeration attacks</strong> where malicious actors guess other candidate IDs. UUIDv4 provides 128-bit globally unique, unguessable identifiers.</td>
         </tr>
         <tr>
-          <td><strong>How does Prisma ORM prevent SQL Injection?</strong></td>
-          <td>Web Application Security</td>
-          <td>Prisma automatically converts all queries into <strong>parameterized queries</strong> (<code>$1</code>, <code>$2</code>), treating user inputs strictly as literal data rather than executable SQL syntax.</td>
+          <td><strong>Why use both PostgreSQL and MongoDB (Polyglot Persistence)?</strong></td>
+          <td>Data Modeling Fundamentals</td>
+          <td>Relational data with strict foreign keys and ACID constraints belongs in PostgreSQL (Users, Job Postings, Applications). Polymorphic, deeply nested trees (resume ASTs, commit trees, and AI reports) belong in MongoDB.</td>
         </tr>
         <tr>
           <td><strong>What is the Microtask Queue vs Macrotask Queue in the Event Loop?</strong></td>
@@ -397,16 +1345,34 @@
           <td>The Microtask Queue (Promise callbacks, <code>await</code> continuations) has higher priority. The Event Loop exhausts all pending microtasks immediately after the Call Stack empties and before executing the next Macrotask (<code>setTimeout</code>, I/O).</td>
         </tr>
         <tr>
-          <td><strong>Why use <code>AbortController</code> in React <code>useEffect</code>?</strong></td>
-          <td>Memory Leak Prevention</td>
-          <td>It aborts in-flight network requests when a component unmounts or when a new request is launched, preventing memory leaks and avoiding React state updates on unmounted DOM nodes.</td>
+          <td><strong>How does Prisma ORM prevent SQL Injection?</strong></td>
+          <td>Web Application Security</td>
+          <td>Prisma automatically converts all queries into <strong>parameterized queries</strong> (<code>$1, $2</code>), treating user inputs strictly as literal data rather than executable SQL syntax.</td>
+        </tr>
+        <tr>
+          <td><strong>Why use `bcrypt` salts and work factors?</strong></td>
+          <td>Cryptographic Security</td>
+          <td>The salt ensures identical passwords produce distinct hashes, neutralizing precomputed Rainbow Table attacks. The configurable work factor (10 rounds) makes brute-force cracking computationally prohibitive.</td>
+        </tr>
+        <tr>
+          <td><strong>Why should RESTful endpoints use nouns instead of verbs?</strong></td>
+          <td>REST Constraints</td>
+          <td>In REST, URIs represent resources (nouns like <code>/jobs</code>), while HTTP verbs (<code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>) communicate the operation. Using verbs in URIs violates the Uniform Interface constraint.</td>
+        </tr>
+        <tr>
+          <td><strong>Why validate request payloads at runtime with Zod?</strong></td>
+          <td>Defensive API Design</td>
+          <td>TypeScript or JavaScript type assertions only exist at compile time; runtime attacks, malformed JSON, and unexpected nulls occur in production. Zod validates boundaries before inputs reach database queries.</td>
         </tr>
       </tbody>
     </table>
   </section>
 
-  <footer style="margin-top: 40px; border-top: 1px solid var(--border); padding-top: 16px; font-size: 12px; color: var(--muted); text-align: center;">
-    Tekmira AI — Beyond Claims. Driven by Evidence. &copy; 2026 Academic Engineering Capstone.
+  <!-- ==================== FOOTER ==================== -->
+  <footer>
+    <div style="font-weight: 600; color: var(--primary); margin-bottom: 4px;">Tekmira AI — Beyond Claims. Driven by Evidence.</div>
+    <div>Master Architecture & Development Walkthrough • Generated for Project Assessor Defense & PDF Export</div>
+    <div style="margin-top: 8px; color: var(--muted); font-size: 11px;">React 18 • Node.js v22 • Express 4 • PostgreSQL • MongoDB • Prisma 6 • Mongoose 8 • Zod • Bcrypt • JWT</div>
   </footer>
 
 </body>
