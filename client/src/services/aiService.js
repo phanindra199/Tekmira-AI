@@ -42,6 +42,21 @@ export const aiService = {
   },
 
   /**
+   * Extract structured schema-validated skills and project evidence.
+   *
+   * @param {string} resumeText
+   * @param {object} [options]
+   * @returns {Promise<object>} Structured analysis payload
+   */
+  async extractStructuredSkills(resumeText, options = {}) {
+    const response = await apiClient.post('/ai/extract-skills', {
+      resumeText,
+      ...options
+    });
+    return response.data;
+  },
+
+  /**
    * Safe status check of backend Gemini service.
    *
    * @returns {Promise<object>} Status metadata

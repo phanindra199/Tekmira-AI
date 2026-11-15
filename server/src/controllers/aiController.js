@@ -21,6 +21,25 @@ export class AiController {
   }
 
   /**
+   * POST /api/ai/extract-skills
+   * Extract structured, schema-validated skills and project evidence.
+   */
+  static async extractSkills(req, res, next) {
+    try {
+      const { resumeText, model, temperature } = req.body;
+      const result = await geminiService.extractStructuredSkills(resumeText, { model, temperature });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Structured skills extracted and validated successfully',
+        data: result
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
    * GET /api/ai/status
    * Safe status check of Gemini AI service.
    */

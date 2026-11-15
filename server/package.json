@@ -16,7 +16,8 @@
     "test:auth": "node src/test/testAuthSecurity.js",
     "test:rest": "node src/test/testRestApiIntegration.js",
     "test:gemini": "node src/test/testGeminiIntegration.js",
-    "test": "node src/database/testRelationalQueries.js && node src/database/testMongoCrud.js && node src/test/testAuthSecurity.js && node src/test/testRestApiIntegration.js && node src/test/testGeminiIntegration.js"
+    "test:prompts": "node src/test/testPromptAndSchemas.js",
+    "test": "node src/database/testRelationalQueries.js && node src/database/testMongoCrud.js && node src/test/testAuthSecurity.js && node src/test/testRestApiIntegration.js && node src/test/testGeminiIntegration.js && node src/test/testPromptAndSchemas.js"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",

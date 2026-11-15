@@ -1,5 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { AppError } from '../utils/AppError.js';
+import { SYSTEM_ASSESSOR_INSTRUCTIONS, createResumeSkillExtractionPrompt } from '../prompts/promptTemplates.js';
+import { StructuredResumeAnalysisSchema, geminiResumeAnalysisJsonSchema } from '../validations/structuredOutputSchemas.js';
 
 class GeminiService {
   constructor() {
@@ -135,50 +137,114 @@ Provide:
         disclaimer: 'This analysis reflects self-reported resume claims and requires GitHub code verification by Tekmira AI.'
       };
     } catch (err) {
-      // Map Gemini / Network / Quota error types defensively
+      return this._handleGeminiError(err, model);
+    }
+  }
+
+  /**
+   * Extract structured, schema-validated technical skills from candidate resume text.
+   * Leverages Gemini responseJsonSchema and enforces server-side Zod verification.
+   *
+   * @param {string} resumeText
+   * @param {object} [options]
+   * @returns {Promise<object>} Schema-validated analysis payload
+   */
+  async extractStructuredSkills(resumeText, options = {}) {
+    if (!resumeText || typeof resumeText !== 'string' || resumeText.trim().length < 20) {
+      throw new AppError('Resume text must be a valid string of at least 20 characters.', 400);
+    }
+
+    const ai = this.getClient();
+    const model = options.model || this.getModelName();
+    const prompt = createResumeSkillExtractionPrompt(resumeText);
+
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: prompt,
+        config: {
+          systemInstruction: SYSTEM_ASSESSOR_INSTRUCTIONS,
+          responseMimeType: 'application/json',
+          responseJsonSchema: geminiResumeAnalysisJsonSchema,
+          temperature: options.temperature ?? 0.1
+        }
+      });
+
+      const rawJsonText = response.text || '{}';
+      let parsedJson;
+
+      try {
+        parsedJson = JSON.parse(rawJsonText);
+      } catch (parseErr) {
+        throw new AppError('Model returned malformed JSON output that could not be parsed.', 502);
+      }
+
+      // STRICT DEFENSIVE BOUNDARY: Validate against Zod schema
+      const validatedData = StructuredResumeAnalysisSchema.parse(parsedJson);
+
+      return {
+        model,
+        analyzedAt: new Date().toISOString(),
+        inputLength: resumeText.length,
+        promptVersion: '1.0.0',
+        data: validatedData,
+        disclaimer: 'Extracted competencies reflect self-reported claims. Verification against GitHub repositories is required by Tekmira AI.'
+      };
+    } catch (err) {
       if (err instanceof AppError) throw err;
-
-      const errorMessage = err.message || '';
-      const errorStatus = err.status || 500;
-
-      // Rate limit / Quota exceeded
-      if (errorStatus === 429 || errorMessage.toLowerCase().includes('quota') || errorMessage.toLowerCase().includes('rate limit')) {
-        throw new AppError(
-          'Gemini API quota or rate limit reached. Please wait a moment before trying again.',
-          429
-        );
+      if (err.name === 'ZodError') {
+        throw new AppError(`Model JSON failed server-side schema validation: ${err.message}`, 502);
       }
+      return this._handleGeminiError(err, model);
+    }
+  }
 
-      // Invalid API Key or Unauthorized
-      if (errorStatus === 401 || errorStatus === 403 || errorMessage.toLowerCase().includes('api_key') || errorMessage.toLowerCase().includes('api key')) {
-        throw new AppError(
-          'Gemini API authentication failed. Verify server GEMINI_API_KEY.',
-          502
-        );
-      }
+  /**
+   * Internal error mapper for upstream Gemini and network failures.
+   */
+  _handleGeminiError(err, model) {
+    if (err instanceof AppError) throw err;
 
-      // Model not found or invalid argument
-      if (errorStatus === 404 || errorMessage.toLowerCase().includes('not found')) {
-        throw new AppError(
-          `Requested Gemini model '${model}' is not accessible or does not exist.`,
-          502
-        );
-      }
+    const errorMessage = err.message || '';
+    const errorStatus = err.status || 500;
 
-      // Timeout or network error
-      if (errorMessage.toLowerCase().includes('timeout') || err.code === 'ETIMEDOUT') {
-        throw new AppError(
-          'Gemini API request timed out. Please try again.',
-          504
-        );
-      }
-
-      // Generic provider failure (sanitized)
+    // Rate limit / Quota exceeded
+    if (errorStatus === 429 || errorMessage.toLowerCase().includes('quota') || errorMessage.toLowerCase().includes('rate limit')) {
       throw new AppError(
-        'Gemini AI provider encountered an error while analyzing the resume.',
+        'Gemini API quota or rate limit reached. Please wait a moment before trying again.',
+        429
+      );
+    }
+
+    // Invalid API Key or Unauthorized
+    if (errorStatus === 401 || errorStatus === 403 || errorMessage.toLowerCase().includes('api_key') || errorMessage.toLowerCase().includes('api key')) {
+      throw new AppError(
+        'Gemini API authentication failed. Verify server GEMINI_API_KEY.',
         502
       );
     }
+
+    // Model not found or invalid argument
+    if (errorStatus === 404 || errorMessage.toLowerCase().includes('not found')) {
+      throw new AppError(
+        `Requested Gemini model '${model}' is not accessible or does not exist.`,
+        502
+      );
+    }
+
+    // Timeout or network error
+    if (errorMessage.toLowerCase().includes('timeout') || err.code === 'ETIMEDOUT') {
+      throw new AppError(
+        'Gemini API request timed out. Please try again.',
+        504
+      );
+    }
+
+    // Generic provider failure (sanitized)
+    throw new AppError(
+      'Gemini AI provider encountered an error while analyzing the resume.',
+      502
+    );
   }
 }
 
