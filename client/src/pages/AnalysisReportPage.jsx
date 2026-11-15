@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PageLayout from '../components/PageLayout';
 import { 
   Award, 
@@ -12,12 +12,96 @@ import {
   BookOpen, 
   Layers,
   ArrowRight,
-  Info
+  Info,
+  RotateCw,
+  FolderGit2,
+  FileText,
+  Briefcase,
+  AlertCircle,
+  Code
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import repositoryService from '../services/repositoryService';
+import Button from '../components/common/Button';
+import Badge from '../components/common/Badge';
+import ErrorMessage from '../components/common/ErrorMessage';
+import LoadingIndicator from '../components/common/LoadingIndicator';
+import { normalizeApiError } from '../utils/apiError';
 
 export default function AnalysisReportPage() {
-  const [reportState, setReportState] = useState('pending'); // 'pending' | 'preview'
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [report, setReport] = useState(null);
+
+  // Auto-run triangulation on mount using session or defaults
+  useEffect(() => {
+    let isMounted = true;
+    async function loadOrTriangulate() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const cachedRepo = sessionStorage.getItem('tekmira_current_repo_snapshot');
+        let repoSnapshot = null;
+        if (cachedRepo) {
+          try { repoSnapshot = JSON.parse(cachedRepo); } catch (e) {}
+        }
+
+        const response = await repositoryService.triangulateSkills({
+          repoSnapshot: repoSnapshot || undefined
+        });
+
+        if (isMounted) {
+          setReport(response.data);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(normalizeApiError(err));
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadOrTriangulate();
+    return () => { isMounted = false; };
+  }, []);
+
+  const handleReRunTriangulation = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const cachedRepo = sessionStorage.getItem('tekmira_current_repo_snapshot');
+      let repoSnapshot = null;
+      if (cachedRepo) {
+        try { repoSnapshot = JSON.parse(cachedRepo); } catch (e) {}
+      }
+
+      const response = await repositoryService.triangulateSkills({
+        repoSnapshot: repoSnapshot || undefined
+      });
+      setReport(response.data);
+    } catch (err) {
+      setError(normalizeApiError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'VERIFIED':
+        return <Badge variant="emerald" className="text-[10px]">VERIFIED</Badge>;
+      case 'UNCLAIMED_STRENGTH':
+        return <Badge variant="navy" className="text-[10px]">UNCLAIMED STRENGTH</Badge>;
+      case 'INFLATED_CLAIM':
+        return <Badge variant="amber" className="text-[10px]">INFLATED CLAIM</Badge>;
+      case 'MISSING_CRITICAL':
+        return <Badge variant="coral" className="text-[10px]">MISSING CRITICAL</Badge>;
+      default:
+        return <Badge variant="slate" className="text-[10px]">{status}</Badge>;
+    }
+  };
 
   return (
     <PageLayout
@@ -33,250 +117,298 @@ export default function AnalysisReportPage() {
       }
       actionButton={
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setReportState(reportState === 'pending' ? 'preview' : 'pending')}
-            className="px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-navy-900 transition-colors"
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleReRunTriangulation}
+            disabled={loading}
           >
-            {reportState === 'pending' ? 'Toggle Blueprint Layout' : 'View Pipeline Status'}
-          </button>
-          <button
-            disabled
-            className="px-4 py-2 rounded-xl bg-slate-100 text-slate-400 font-semibold text-xs flex items-center gap-1.5 cursor-not-allowed"
+            <RotateCw className={`w-3.5 h-3.5 mr-1 ${loading ? 'animate-spin' : ''}`} />
+            <span>Re-Calculate PRI</span>
+          </Button>
+
+          <Button
+            variant="navy"
+            size="sm"
+            onClick={() => window.print()}
           >
-            <Download className="w-3.5 h-3.5" />
-            <span>Export PDF</span>
-          </button>
+            <Download className="w-3.5 h-3.5 mr-1 text-coral-400" />
+            <span>Export Report (PDF)</span>
+          </Button>
         </div>
       }
     >
-      {reportState === 'pending' ? (
-        /* Pending State: Explains that real data comes from the pipeline */
-        <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm text-center">
-            <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-200 mx-auto flex items-center justify-center text-navy-900 mb-4">
-              <Award className="w-8 h-8 text-coral-500" />
-            </div>
-
-            <h3 className="text-xl font-bold text-navy-900 mb-2">
-              Triangulation Report Engine Ready
-            </h3>
-            <p className="text-sm text-slate-500 max-w-lg mx-auto mb-6 leading-relaxed">
-              In accordance with our strict <strong className="text-navy-900">Zero Fake Data</strong> policy, 
-              this report will display only genuine analysis once the backend parsing (Phase 3), GitHub mining (Phase 4), and Gemini triangulation (Phase 5) modules are connected.
-            </p>
-
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 max-w-xl mx-auto text-left text-xs text-slate-600 space-y-2 mb-8">
-              <div className="flex items-center justify-between font-bold text-navy-900 border-b border-slate-200 pb-2">
-                <span>Required Verification Pipeline</span>
-                <span>Current Status</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>1. Resume Claims Ingested</span>
-                <span className="text-coral-600 font-semibold">Pending Upload</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>2. GitHub Repository Evidence</span>
-                <span className="text-coral-600 font-semibold">Pending Mining</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>3. Target Job Description</span>
-                <span className="text-coral-600 font-semibold">Pending Selection</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-center gap-3">
-              <Link
-                to="/resume-analysis"
-                className="px-6 py-2.5 rounded-xl bg-navy-900 hover:bg-navy-800 text-white font-semibold text-xs shadow-md transition-all"
-              >
-                Start Verification Pipeline
-              </Link>
-              <button
-                onClick={() => setReportState('preview')}
-                className="px-6 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-navy-900 font-semibold text-xs shadow-sm transition-all"
-              >
-                Inspect Report Schema Blueprint
-              </button>
-            </div>
-          </div>
+      {/* Error state */}
+      {error && (
+        <div className="mb-6">
+          <ErrorMessage message={error} onDismiss={() => setError(null)} />
         </div>
-      ) : (
-        /* Report Schema Blueprint (Visualizing the explainable report structure) */
-        <div className="space-y-8">
-          {/* Top Notice */}
-          <div className="p-4 rounded-xl bg-navy-900 text-white text-xs flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Info className="w-4 h-4 text-coral-500" />
-              <span>
-                <strong>Blueprint Layout:</strong> This UI shows the exact structure of the explainable report. Real dynamic metrics will populate upon backend integration.
-              </span>
-            </div>
-            <button
-              onClick={() => setReportState('pending')}
-              className="text-xs font-bold text-coral-500 hover:underline"
-            >
-              Back to status
-            </button>
-          </div>
+      )}
 
-          {/* Readiness Score Summary Card */}
+      {/* Loading state */}
+      {loading && (
+        <div className="bg-white rounded-2xl p-12 border border-slate-200 shadow-sm text-center mb-8">
+          <LoadingIndicator message="Computing Placement Readiness Index & executing 3-way evidence triangulation..." />
+        </div>
+      )}
+
+      {/* Report View */}
+      {report && !loading && (
+        <div className="space-y-8 mb-8 animate-fade-in">
+          
+          {/* Top Score Banner: Placement Readiness Index (PRI) */}
           <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-              <div>
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              
+              {/* Left Score Gauge */}
+              <div className="lg:col-span-4 flex flex-col items-center justify-center p-6 bg-slate-50 rounded-2xl border border-slate-100 text-center">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                   Placement Readiness Index
                 </span>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-black text-navy-900">84</span>
-                  <span className="text-lg font-semibold text-slate-400">/ 100</span>
+                
+                <div className="relative w-32 h-32 flex items-center justify-center mb-3">
+                  <div className="absolute inset-0 rounded-full border-8 border-slate-200" />
+                  <div 
+                    className="absolute inset-0 rounded-full border-8 border-coral-500 border-t-navy-900 border-r-navy-900 transition-all duration-1000"
+                    style={{
+                      transform: `rotate(${Math.min(360, (report.overallReadinessScore / 100) * 360)}deg)`
+                    }}
+                  />
+                  <div className="flex flex-col items-center z-10">
+                    <span className="text-4xl font-extrabold text-navy-900 font-mono tracking-tight">
+                      {report.overallReadinessScore}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-semibold">/ 100</span>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-                  Calculated from 40% JD match + 35% GitHub code proof + 15% commit recency + 10% test hygiene.
-                </p>
+
+                <Badge 
+                  variant={
+                    report.overallReadinessScore >= 85 ? 'emerald' : 
+                    report.overallReadinessScore >= 70 ? 'navy' : 
+                    report.overallReadinessScore >= 50 ? 'amber' : 'coral'
+                  }
+                  className="font-bold text-xs px-3 py-1"
+                >
+                  {report.readinessTier || 'Placement Ready'}
+                </Badge>
               </div>
 
-              <div className="md:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-[11px] font-semibold text-slate-500 block">Verified Skills</span>
-                  <span className="text-2xl font-bold text-emerald-600">8</span>
-                  <span className="text-[10px] text-slate-400 block mt-0.5">Code proof verified</span>
+              {/* Right Metrics Strip & Explanation */}
+              <div className="lg:col-span-8 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-4 h-4 text-coral-500" />
+                    <h3 className="text-sm font-bold text-navy-900 uppercase tracking-wider">
+                      Executive Evidence Summary
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed mb-6">
+                    {report.summary}
+                  </p>
                 </div>
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-[11px] font-semibold text-slate-500 block">Unverified Claims</span>
-                  <span className="text-2xl font-bold text-amber-500">2</span>
-                  <span className="text-[10px] text-slate-400 block mt-0.5">No repo code found</span>
-                </div>
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-[11px] font-semibold text-slate-500 block">Missing JD Skills</span>
-                  <span className="text-2xl font-bold text-coral-500">1</span>
-                  <span className="text-[10px] text-slate-400 block mt-0.5">Required by role</span>
-                </div>
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-[11px] font-semibold text-slate-500 block">Extra Strengths</span>
-                  <span className="text-2xl font-bold text-navy-900">3</span>
-                  <span className="text-[10px] text-slate-400 block mt-0.5">Bonus skills in code</span>
+
+                {/* 4 Metrics Cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-100">
+                    <span className="block text-[10px] text-emerald-800 font-semibold uppercase">Verified Proofs</span>
+                    <span className="text-lg font-bold text-emerald-900 font-mono">
+                      {report.metrics?.verifiedCount || 0}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-navy-50/60 border border-navy-100">
+                    <span className="block text-[10px] text-navy-800 font-semibold uppercase">Bonus Strengths</span>
+                    <span className="text-lg font-bold text-navy-900 font-mono">
+                      {report.metrics?.unclaimedStrengthsCount || 0}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-amber-50/60 border border-amber-100">
+                    <span className="block text-[10px] text-amber-800 font-semibold uppercase">Inflated Claims</span>
+                    <span className="text-lg font-bold text-amber-900 font-mono">
+                      {report.metrics?.inflatedCount || 0}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-coral-50/60 border border-coral-100">
+                    <span className="block text-[10px] text-coral-800 font-semibold uppercase">Required Missing</span>
+                    <span className="text-lg font-bold text-coral-900 font-mono">
+                      {report.metrics?.missingCriticalCount || 0}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Triangulation Evidence Matrix Table */}
+          {/* THE 3-WAY TRIANGULATION MATRIX TABLE */}
           <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+            <div className="flex flex-wrap items-center justify-between pb-4 border-b border-slate-100 mb-6 gap-3">
               <div>
-                <h3 className="text-base font-bold text-navy-900 flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-coral-500" />
-                  <span>Explainable Triangulation Matrix</span>
+                <h3 className="text-sm font-bold text-navy-900 uppercase tracking-wider flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-navy-900" />
+                  <span>3-Way Evidence Triangulation Matrix</span>
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Item-by-item breakdown showing empirical evidence citations.
+                  Cross-referencing Resume Claims (C) vs GitHub Code Proof (D) vs Target Job Requirements (R)
                 </p>
               </div>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                Sample Blueprint Rows
-              </span>
+
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" /> Verified
+                <span className="inline-block w-2 h-2 rounded-full bg-navy-900 ml-2" /> Bonus
+                <span className="inline-block w-2 h-2 rounded-full bg-amber-500 ml-2" /> Inflated
+                <span className="inline-block w-2 h-2 rounded-full bg-coral-500 ml-2" /> Missing
+              </div>
             </div>
 
+            {/* Matrix Table */}
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider text-[10px]">
-                    <th className="py-3 px-4 font-bold">Skill</th>
-                    <th className="py-3 px-4 font-bold">Resume Claim</th>
-                    <th className="py-3 px-4 font-bold">GitHub Code Proof</th>
-                    <th className="py-3 px-4 font-bold">Target JD</th>
-                    <th className="py-3 px-4 font-bold">Status</th>
-                    <th className="py-3 px-4 font-bold">Explanation & Citations</th>
+                  <tr className="border-b border-slate-200 bg-slate-50/75 text-[11px] font-bold text-navy-900 uppercase tracking-wider">
+                    <th className="py-3 px-4">Technical Skill</th>
+                    <th className="py-3 px-3 text-center">Resume Claim</th>
+                    <th className="py-3 px-3 text-center">GitHub Proof</th>
+                    <th className="py-3 px-3 text-center">Job Requirement</th>
+                    <th className="py-3 px-4">Triangulation Status</th>
+                    <th className="py-3 px-4">Concrete Code Proof Citation</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {/* Row 1 */}
-                  <tr>
-                    <td className="py-3.5 px-4 font-bold text-navy-900">React</td>
-                    <td className="py-3.5 px-4"><span className="text-emerald-600 font-semibold">Claimed (12 mos)</span></td>
-                    <td className="py-3.5 px-4"><span className="text-emerald-600 font-semibold">42 Commits (3 Repos)</span></td>
-                    <td className="py-3.5 px-4"><span className="text-navy-900 font-semibold">Must-Have</span></td>
-                    <td className="py-3.5 px-4">
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
-                        Verified
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-slate-500">
-                      Found extensive custom hook usage and JSX components in <code className="bg-slate-100 px-1 py-0.5 rounded text-navy-900 font-mono">repo/client</code>.
-                    </td>
-                  </tr>
+                <tbody className="divide-y divide-slate-100 font-sans">
+                  {report.triangulationMatrix?.map((item, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3 px-4 font-semibold text-navy-900">
+                        <div>{item.skillName}</div>
+                        <span className="text-[10px] text-slate-400 font-normal">{item.category}</span>
+                      </td>
 
-                  {/* Row 2 */}
-                  <tr>
-                    <td className="py-3.5 px-4 font-bold text-navy-900">Docker</td>
-                    <td className="py-3.5 px-4"><span className="text-emerald-600 font-semibold">Claimed</span></td>
-                    <td className="py-3.5 px-4"><span className="text-amber-500 font-semibold">0 Proof</span></td>
-                    <td className="py-3.5 px-4"><span className="text-navy-900 font-semibold">Must-Have</span></td>
-                    <td className="py-3.5 px-4">
-                      <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 font-semibold border border-amber-200">
-                        Unverified
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-slate-500">
-                      Claimed in resume, but zero Dockerfile or docker-compose configurations were detected across public repos.
-                    </td>
-                  </tr>
+                      <td className="py-3 px-3 text-center">
+                        {item.isClaimedInResume ? (
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-700">✓</span>
+                        ) : (
+                          <span className="text-slate-300 font-mono">—</span>
+                        )}
+                      </td>
 
-                  {/* Row 3 */}
-                  <tr>
-                    <td className="py-3.5 px-4 font-bold text-navy-900">PostgreSQL</td>
-                    <td className="py-3.5 px-4"><span className="text-slate-400 font-semibold">Not Listed</span></td>
-                    <td className="py-3.5 px-4"><span className="text-emerald-600 font-semibold">18 Commits</span></td>
-                    <td className="py-3.5 px-4"><span className="text-navy-900 font-semibold">Must-Have</span></td>
-                    <td className="py-3.5 px-4">
-                      <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold border border-blue-200">
-                        Hidden Strength
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-slate-500">
-                      You implemented SQL migrations and DDL queries in code, but forgot to list this skill on your resume!
-                    </td>
-                  </tr>
+                      <td className="py-3 px-3 text-center">
+                        {item.isDemonstratedInCode ? (
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-700">✓</span>
+                        ) : (
+                          <span className="text-slate-300 font-mono">—</span>
+                        )}
+                      </td>
+
+                      <td className="py-3 px-3 text-center">
+                        {item.isRequiredInJob ? (
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-navy-100 text-navy-900 font-bold">✓</span>
+                        ) : (
+                          <span className="text-slate-300 font-mono">—</span>
+                        )}
+                      </td>
+
+                      <td className="py-3 px-4">
+                        {getStatusBadge(item.verificationStatus)}
+                      </td>
+
+                      <td className="py-3 px-4 text-slate-600">
+                        {item.evidence?.length > 0 ? (
+                          <div className="space-y-1">
+                            {item.evidence.map((ev, eIdx) => (
+                              <div key={eIdx} className="flex items-center gap-1.5 font-mono text-[11px] text-slate-700">
+                                <Code className="w-3 h-3 text-coral-500 shrink-0" />
+                                <span className="font-semibold">{ev.filePath}:</span>
+                                <span className="text-slate-500 truncate max-w-xs">{ev.codeSnippet}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : item.verificationStatus === 'INFLATED_CLAIM' ? (
+                          <span className="text-amber-700 text-[11px] italic">
+                            Zero code evidence found in repository.
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 text-[11px] italic">
+                            Not demonstrated.
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           </div>
 
-          {/* Actionable Remediation Roadmap */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-            <h3 className="text-base font-bold text-navy-900 mb-1 flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-coral-500" />
-              <span>Targeted Remediation Roadmap</span>
-            </h3>
-            <p className="text-xs text-slate-500 mb-6">
-              Specific actions recommended before attending technical placement interviews for this role.
-            </p>
+          {/* ACTIONABLE REMEDIATION PLAN */}
+          {report.remediationPlan?.length > 0 && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+              <h3 className="text-sm font-bold text-navy-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-coral-500" />
+                <span>Actionable Remediation Plan & Gap Closure</span>
+              </h3>
 
-            <div className="space-y-3">
-              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3">
-                <span className="w-6 h-6 rounded-lg bg-navy-900 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
-                  1
-                </span>
-                <div>
-                  <h4 className="text-xs font-bold text-navy-900">Containerize your existing projects with Docker</h4>
-                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                    Create a multi-stage <code className="bg-white px-1 py-0.5 rounded border border-slate-200 font-mono">Dockerfile</code> in your primary web app repo to transform your unverified Docker claim into verifiable code proof.
-                  </p>
-                </div>
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {report.remediationPlan.map((plan, idx) => (
+                  <div
+                    key={idx}
+                    className={`p-4 rounded-xl border ${
+                      plan.gapSeverity === 'HIGH'
+                        ? 'border-coral-200 bg-coral-50/30'
+                        : 'border-amber-200 bg-amber-50/30'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-navy-900">{plan.skill}</span>
+                      <Badge variant={plan.gapSeverity === 'HIGH' ? 'coral' : 'amber'}>
+                        {plan.gapSeverity} Priority
+                      </Badge>
+                    </div>
 
-              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3">
-                <span className="w-6 h-6 rounded-lg bg-navy-900 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
-                  2
-                </span>
-                <div>
-                  <h4 className="text-xs font-bold text-navy-900">Update resume to explicitly highlight PostgreSQL</h4>
-                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                    You have active SQL implementations in your repository. Add PostgreSQL to your resume Skills section to gain an immediate +5% JD match.
-                  </p>
-                </div>
+                    <p className="text-xs text-slate-700 mb-2 leading-relaxed">
+                      {plan.recommendation}
+                    </p>
+
+                    {plan.suggestedProject && (
+                      <div className="text-[11px] text-slate-600 bg-white/80 p-2.5 rounded-lg border border-slate-200/60 mb-2">
+                        <strong className="block text-navy-900 font-semibold mb-0.5">Suggested Implementation:</strong>
+                        <span>{plan.suggestedProject}</span>
+                      </div>
+                    )}
+
+                    {plan.suggestedResources?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 text-[10px]">
+                        {plan.suggestedResources.map((res, rIdx) => (
+                          <span key={rIdx} className="px-2 py-0.5 rounded bg-white text-slate-600 border border-slate-200">
+                            {res}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
+          )}
+
+          {/* Next Steps: AI Interview Preparation (Day 14) */}
+          <div className="p-6 rounded-2xl bg-gradient-to-r from-navy-900 to-navy-800 text-white flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h4 className="text-sm font-bold flex items-center gap-2 text-white">
+                <Sparkles className="w-4 h-4 text-coral-400" />
+                <span>Ready for Grounded Technical Viva Practice?</span>
+              </h4>
+              <p className="text-xs text-slate-300 mt-1 max-w-xl">
+                Tekmira AI generates viva voce questions directly grounded in your verified code evidence and identified remediation gaps.
+              </p>
+            </div>
+
+            <Link to="/interview-prep">
+              <Button variant="coral" size="sm">
+                <span>Start Technical Viva Prep</span>
+                <ArrowRight className="w-4 h-4 ml-1.5" />
+              </Button>
+            </Link>
           </div>
         </div>
       )}

@@ -17,5 +17,6 @@ export const config = {
   mongodbUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/tekmira_docs',
   jwtSecret: process.env.JWT_SECRET || 'tekmira_default_dev_secret_key_change_in_production',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  githubToken: process.env.GITHUB_TOKEN || '',
   isProduction: process.env.NODE_ENV === 'production'
 };

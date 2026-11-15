@@ -646,3 +646,79 @@ Tekmira AI strictly enforces standardized HTTP status codes:
    - **Answer:** *"Because resumes have a capped 5MB limit, keeping them in RAM buffer allows immediate magic-byte validation and parsing without writing untrusted binaries to the host filesystem. This eliminates orphaned temporary files on server restarts, prevents path traversal disk writes, and avoids file I/O bottlenecks."*
 3. **Viva Question:** *"What happens when a candidate uploads a scanned photograph of a resume saved as a PDF?"*
    - **Answer:** *"PDF text stream parsers only extract text operators (`Tj`/`TJ`). A scanned document contains only a raster bitmap with zero text streams. Tekmira AI detects this when the character count is below 20, flags `isScanned: true`, and returns a clear, honest HTTP 422 error notifying the candidate that OCR for scanned images is not supported and digital text is required."*
+
+---
+
+## 15. Section 15: GitHub REST API Mining, Rate Limits & Untrusted Code Defense (Day 11)
+
+### 15.1 Public Repository URL Validation & SSRF Prevention
+- **The Attack Vector (Server-Side Request Forgery - SSRF):**
+  - An attacker inputs internal loopback or cloud metadata URLs (e.g. `http://169.254.169.254/latest/meta-data` or `http://localhost:5432`) disguised as repository links to extract internal credentials or probe local databases.
+- **Tekmira AI's Perimeter Defenses:**
+  - **Host Whitelist:** Only standard `github.com` (and `www.github.com`) hostnames are permitted. Non-GitHub origins (`gitlab.com`, `evil.com`, raw IPs) trigger HTTP 400 rejection.
+  - **Protocol Filtering:** Disallows `file://`, `ftp://`, `gopher://`, or `data:` schemes.
+  - **Path Traversal Guard:** Checks for traversal tokens (`/..`, `\\..`) before URL normalization.
+
+### 15.2 GitHub Rate Limits (60 vs 5,000 req/hour) & Defensive Caching
+- **Unauthenticated vs Authenticated Tiers:**
+  - Unauthenticated calls to GitHub REST API v3 are capped at **60 requests per hour per IP address**.
+  - Supplying an authorized token via `Authorization: Bearer <GITHUB_TOKEN>` raises the quota to **5,000 requests per hour**.
+- **Defensive Error Handling:**
+  - Reads `x-ratelimit-remaining` and `x-ratelimit-reset` response headers.
+  - If a 403 or 429 response arrives, Tekmira AI maps it to a user-friendly error with the exact reset time and instructions for setting `GITHUB_TOKEN`.
+- **In-Memory Caching:**
+  - Repositories are cached in-memory with a 5-minute TTL (`repoCache`), ensuring subsequent evaluations of the same repository consume zero external API quota.
+
+### 15.3 The Zero Code Execution Security Guarantee
+- **Untrusted Code Principle:**
+  - Candidates submit arbitrary source code repositories. Under no circumstance does Tekmira AI run `eval()`, `require()`, `exec()`, or execute any candidate scripts.
+  - Source files and manifests (`package.json`, `requirements.txt`) are treated strictly as **passive, static string data** parsed through standard JSON and regex parsers.
+  - File reading is strictly capped at **30 KB per file** to neutralize decompression and memory exhaustion attacks.
+
+---
+
+## 16. Section 16: 3-Way Skill Evidence Triangulation & Placement Readiness Index (Day 12)
+
+### 16.1 The 3-Way Triangulation Architecture ($C \times D \times R$)
+Rather than blindly believing resume claims or relying solely on ungrounded LLM praise, Tekmira AI models candidate competency through three distinct empirical dimensions:
+1. **$C$ (Claimed Skills):** Technical proficiencies explicitly claimed in the candidate's parsed resume.
+2. **$D$ (Demonstrated Code Proof):** Concrete implementation evidence extracted from public GitHub repositories (`languages`, `detectedDependencies`, `hasTestFiles`, `authenticCommits`).
+3. **$R$ (Target Job Requirements):** Curated competencies required by the target campus recruitment profile.
+
+### 16.2 The 4-State Verification Status Model
+For every evaluated technical competency, Tekmira AI calculates one of four mutually exclusive statuses:
+| Verification Status | Logical Formula | Real-World Campus Placement Meaning |
+| :--- | :--- | :--- |
+| **`VERIFIED`** | $C \land D$ | **Ideal Candidate Proof:** The candidate claimed the skill on their resume AND has proven code in their GitHub repo. |
+| **`UNCLAIMED_STRENGTH`** | $\neg C \land D$ | **Hidden Student Bonus:** The candidate omitted this skill from their resume, but Tekmira AI discovered authentic implementation code in their repo. |
+| **`INFLATED_CLAIM`** | $C \land \neg D$ | **Resume Inflation Alert:** The candidate claimed the skill, but zero code evidence exists in their public repository. |
+| **`MISSING_CRITICAL`** | $\neg C \land \neg D \land R$ | **Recruitment Gap:** The target campus job strictly requires this skill, but the student neither claimed it nor wrote code for it. |
+
+### 16.3 The Placement Readiness Index (PRI) Mathematical Formula
+The overall readiness score is computed using a transparent, deterministic mathematical formula clamped between 0 and 100:
+
+$$\text{PRI} = \max\left(0, \min\left(100, \text{round}\left(0.40 \cdot S_{\text{match}} + 0.35 \cdot S_{\text{depth}} + 0.15 \cdot S_{\text{rigor}} + 0.10 \cdot S_{\text{bonus}} - P_{\text{inflation}}\right)\right)\right)$$
+
+Where:
+- **$S_{\text{match}}$ (40% Weight):** Job Requirement Coverage $= \left(\frac{\text{verifiedRequiredCount}}{\text{totalRequiredCount}}\right) \times 100$.
+- **$S_{\text{depth}}$ (35% Weight):** Implementation Depth $= \min(100, \text{languagesCount} \times 25 + \text{dependenciesCount} \times 5)$.
+- **$S_{\text{rigor}}$ (15% Weight):** Engineering Rigor $= 60$ pts for test suites (`hasTestFiles`) $+ 40$ pts for testing frameworks (`jest`, `supertest`, `vitest`).
+- **$S_{\text{bonus}}$ (10% Weight):** Modern Tool Bonus $= \min(100, \text{unclaimedStrengthsCount} \times 25)$.
+- **$P_{\text{inflation}}$ (Deduction):** Penalty for ungrounded claims $= \min(25, \text{inflatedCount} \times 5)$.
+
+### 16.4 Why README Keywords Alone Do NOT Count as Code Proof
+- **The Student Anti-Pattern:**
+  - Candidates often paste exhaustive skill lists into their project README.md to game ATS keyword scanners (e.g. *"Tech Stack: React, Node, Docker, Kubernetes, AWS, Kafka"* in a simple static website).
+- **Tekmira AI's Enforcement:**
+  - A README mention alone is treated strictly as an unverified narrative claim.
+  - Concrete code proof requires **manifest-backed evidence** (`package.json`, `requirements.txt`), language byte distributions ($>15\%$), or verified author commits.
+
+---
+
+### 16.5 Viva Voce Questions & Technical Answers
+1. **Viva Question:** *"How does Tekmira AI's 3-Way Triangulation algorithm prevent candidates from gaming campus recruitment evaluations?"*
+   - **Answer:** *"Traditional platforms only match resume text against job descriptions (a 2-way comparison). This rewards buzzword stuffing and resume exaggeration. Tekmira AI introduces a third mandatory dimension: empirical GitHub commit code. A candidate cannot achieve a high Placement Readiness Index simply by listing buzzwords; unsubstantiated claims trigger the `INFLATED_CLAIM` classification and apply mathematical penalty deductions ($P_{\text{inflation}}$) to their score."*
+2. **Viva Question:** *"What is Server-Side Request Forgery (SSRF), and how does Tekmira AI defend against it during GitHub repository fetching?"*
+   - **Answer:** *"SSRF occurs when an attacker tricks a backend server into making HTTP requests to internal, private network resources (such as AWS metadata endpoints at 169.254.169.254 or local Redis instances). Tekmira AI defends against SSRF by strictly enforcing a hostname whitelist (`github.com` only), validating protocols to HTTP/HTTPS, rejecting path traversal identifiers (`/..`), and verifying repository slugs via regular expressions before any network request is initiated."*
+3. **Viva Question:** *"How does the Placement Readiness Index (PRI) handle students who write automated unit tests?"*
+   - **Answer:** *"In our formula, engineering rigor ($S_{\text{rigor}}$) contributes 15% to the final readiness score. The engine inspects the git tree for test files (`*.test.js`, `*.spec.js`) and tests frameworks (`jest`, `supertest`, `vitest`). If present, the candidate is awarded up to 100 points in the rigor component, reflecting industry expectations for software quality."*

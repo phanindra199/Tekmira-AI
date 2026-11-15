@@ -3,10 +3,13 @@ import {
   uploadResumePdf,
   createResumeRecord,
   getResumeRecord,
+  fetchRepositoryEvidenceHandler,
   saveRepositorySnapshot,
   getUserRepositories,
+  triangulateSkillsHandler,
   createAnalysisReport,
-  getAnalysisReport
+  getAnalysisReport,
+  getUserReportsHandler
 } from '../controllers/analysisController.js';
 import { authenticate, optionalAuth } from '../middleware/authMiddleware.js';
 import { validate } from '../middleware/validate.js';
@@ -23,7 +26,6 @@ import {
 const router = Router();
 
 // --- PDF Resume Upload & Stream Extraction ---
-// Public / Semi-Authenticated Upload (associates with candidate if Bearer token is provided)
 router.post(
   '/resumes/upload',
   optionalAuth,
@@ -32,7 +34,6 @@ router.post(
   uploadResumePdf
 );
 
-// Strictly Authenticated Resume Upload
 router.post(
   '/resumes/upload-authenticated',
   authenticate,
@@ -45,12 +46,15 @@ router.post(
 router.post('/resumes', validate(createResumeSchema), createResumeRecord);
 router.get('/resumes/:id', getResumeRecord);
 
-// --- Repository Snapshot Routes ---
+// --- GitHub Repository Mining & Snapshots ---
+router.post('/repositories/fetch', optionalAuth, fetchRepositoryEvidenceHandler);
 router.post('/repositories', validate(saveRepositorySchema), saveRepositorySnapshot);
 router.get('/repositories/user/:userId', getUserRepositories);
 
-// --- Skill Analysis Report Routes ---
+// --- 3-Way Skill Evidence Triangulation & Reports ---
+router.post('/triangulate', optionalAuth, triangulateSkillsHandler);
 router.post('/reports', validate(createReportSchema), createAnalysisReport);
+router.get('/reports/user/:userId', getUserReportsHandler);
 router.get('/reports/:id', getAnalysisReport);
 
 export default router;
