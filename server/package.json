@@ -29,6 +29,7 @@
     "test:unit": "node src/test/unit/testSkillNormalizationUnit.js && node src/test/unit/testPlacementReadinessIndexUnit.js && node src/test/unit/testStructuredSchemaParsingUnit.js",
     "test:api": "node src/test/integration/testSupertestApi.js",
     "test:day16": "npm run test:unit && npm run test:api",
+    "test:all": "npm run test:unit && npm run test:api && npm run test:docker && npm run test:aggregation && npm run test:production && npm run test:security",
     "test": "node src/database/testRelationalQueries.js && node src/database/testMongoCrud.js && node src/test/testAuthSecurity.js && node src/test/testRestApiIntegration.js && node src/test/testGeminiIntegration.js && node src/test/testPromptAndSchemas.js && node src/test/testPdfUploadAndExtraction.js && node src/test/testGitHubIntegration.js && node src/test/testMatchingEngine.js && node src/test/testInterviewPrep.js && node src/test/testFormValidationEdgeCases.js"
   },
   "dependencies": {

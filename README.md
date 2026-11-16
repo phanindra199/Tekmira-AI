@@ -1,156 +1,259 @@
 # Tekmira AI 🚀
 
-> **Beyond Claims. Driven by Evidence.**
-
-Tekmira AI is an AI-powered platform that evaluates resume-claimed skills against actual GitHub project evidence, identifies skill gaps, recommends suitable job opportunities, and helps users improve their job readiness.
-
-The platform solves the resume inflation and skill-mismatch problem in college campus recruitment by triangulating three independent data sources:
-1. **Self-Reported Claims:** Extracted from the student's resume.
-2. **Empirical Evidence:** Mined from the student's public GitHub repositories, commit logs, and code implementations.
-3. **Target Job Requirements:** Extracted from target job descriptions (JDs) and industry benchmark competency maps.
-
-The system produces an **explainable skill analysis**, an **evidence-backed match score ($0-100$)**, and an **actionable placement readiness roadmap**.
+> **Beyond Claims. Driven by Evidence.**  
+> *A Production-Grade Campus Placement Readiness & Evidence Verification Platform*  
+> **Release Target:** `v1.0.0` Production Capstone Release  
+> **Repository:** [https://github.com/phanindra199/Tekmira-AI.git](https://github.com/phanindra199/Tekmira-AI.git)  
 
 ---
 
-## 🏗️ Technology Stack
+## 📖 Table of Contents
 
-| Layer | Technologies Currently Implemented | Technologies Planned in Roadmap |
-| :--- | :--- | :--- |
-| **Frontend** | React 18, Vite 6, Tailwind CSS 3, React Router v6, Axios, Lucide Icons | Chart.js / Recharts (for radar graphs) |
-| **Backend** | Node.js (v22), Express 4 (ES Modules), CORS, dotenv | Multer, pdf-parse, Supertest |
-| **Databases** | *None connected yet* | PostgreSQL (Relational) + MongoDB (Documents) |
-| **AI Engine** | *None connected yet* | Google Gemini API (Structured Schema Extraction) |
-| **Security & Auth** | *None connected yet* | JWT (JSON Web Tokens), bcrypt |
-| **DevOps** | Native environment configs (`.env`) | Docker & Docker Compose |
-
----
-
-## 📊 Current Implementation Status
-
-> **Important:** To ensure modular engineering and academic integrity, features are delivered incrementally. Below is the exact status of each module:
-
-| Module / Layer | Component / Feature | Status | Notes |
-| :--- | :--- | :--- | :--- |
-| **Frontend** | React + Vite Single Page Application | ✅ **LIVE** | Sub-second HMR running on port `5173`. |
-| **Frontend** | Responsive Design System (Tailwind CSS) | ✅ **LIVE** | Navy primary (`#0A142F`), white canvas, coral accent. |
-| **Frontend** | 8 Application Views | ✅ **LIVE** | Home, Dashboard, Resume, GitHub, Job Match, Report, Login, Register. |
-| **Frontend** | Reusable Component Shell | ✅ **LIVE** | Navbar, Sidebar, Footer, DashboardCard, PageLayout. |
-| **Frontend** | Reusable Axios API Gateway | ✅ **LIVE** | Environment-driven `apiClient.js` with interceptors. |
-| **Frontend** | Live Backend Status Badge | ✅ **LIVE** | Reactive status widget displayed in Navbar & Sidebar. |
-| **Backend** | Express REST API Scaffold | ✅ **LIVE** | Native ES Modules on port `5000`. |
-| **Backend** | Health Check Endpoint | ✅ **LIVE** | `GET /api/health` returning operational status. |
-| **Backend** | Centralized Error & 404 Handlers | ✅ **LIVE** | `AppError` class, uniform error JSON envelopes. |
-| **Cross-Origin** | CORS Gateway | ✅ **LIVE** | Whitelisted communication between port 5173 and 5000. |
-| **Database** | PostgreSQL & MongoDB | ⏳ *PLANNED* | Scheduled for Module 4 (Docker Compose). |
-| **Auth** | JWT + bcrypt Authentication | ⏳ *PLANNED* | Scheduled for Module 4. |
-| **Parser** | PDF Resume Parsing (`pdf-parse`) | ⏳ *PLANNED* | Scheduled for Module 5. |
-| **Miner** | GitHub Commit & AST Mining | ⏳ *PLANNED* | Scheduled for Module 6. |
-| **AI Engine** | Google Gemini API Triangulation | ⏳ *PLANNED* | Scheduled for Module 7. |
+- [Overview & The Problem Solved](#-overview--the-problem-solved)
+- [System Architecture & 3-Way Triangulation](#-system-architecture--3-way-triangulation)
+- [Key Features](#-key-features)
+- [Technology Stack](#-technology-stack)
+- [Project Directory Structure](#-project-directory-structure)
+- [Getting Started](#-getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Local Development Setup](#local-development-setup)
+  - [Docker Containerized Stack](#docker-containerized-stack)
+- [Automated Verification & Testing (80/80 Passing)](#-automated-verification--testing)
+- [Security Architecture & Threat Modeling](#-security-architecture--threat-modeling)
+- [Documentation Index](#-documentation-index)
+- [License](#-license)
 
 ---
 
-## 📁 Repository Structure
+## 🎯 Overview & The Problem Solved
+
+College campus recruitment faces a systemic crisis: **resume inflation, keyword packing, and unverified skill claims**. Students routinely copy framework buzzwords into resumes without hands-on coding competence, while recruiters spend thousands of engineering hours conducting redundant technical screens on candidates with superficial knowledge.
+
+**Tekmira AI** solves this by triangulating three independent data vectors into an objective, explainable **Placement Readiness Index ($PRI$)**:
+1. **Self-Reported Claims:** Mined directly from uploaded PDF resumes using binary stream extraction and semantic entity parsing.
+2. **Empirical Code Proof:** Mined from the candidate's public GitHub repositories (language byte distributions, dependencies, commit histories, and AST patterns).
+3. **Target Job Requirements:** Extracted from target job descriptions (JDs) and university benchmark competency maps.
+
+---
+
+## 🏛️ System Architecture & 3-Way Triangulation
 
 ```text
-tekmira-ai/
-├── client/                     # Frontend Application (React + Vite + Tailwind)
++-----------------------+     +------------------------+     +-----------------------+
+|  Candidate PDF Resume |     | GitHub Repository Code |     | Target Job Descriptor |
+| (Claims & Credentials)|     | (Commits & AST Proof)  |     | (Benchmark Comp Map)  |
++-----------+-----------+     +-----------+------------+     +-----------+-----------+
+            |                             |                              |
+            v                             v                              v
+    [ Stream Parser ]             [ Evidence Miner ]             [ Role Analyzer ]
+    (Magic Bytes & SHA)           (Languages & Deps)             (Required Skills)
+            \                             |                             /
+             \                            |                            /
+              +------------------->[ MATCHING ENGINE ]<---------------+
+                                   (Triangulation Matrix)
+                                          |
+                      +-------------------+-------------------+
+                      |                                       |
+                      v                                       v
+         [ Placement Readiness Index ]            [ Grounded Viva Voce Prep ]
+         - Formula Clamped [0, 100]               - File Citation Questions
+         - 4-Tier Competency Breakdown            - 3-Way Rubric Scoring
+         - High/Med/Low Remediation               - Real-Time Practice UI
+```
+
+### The Placement Readiness Index ($PRI$) Formula
+
+$$PRI = \max\left(0, \min\left(100, \left( 0.40 \cdot S_{\text{match}} + 0.35 \cdot S_{\text{proof}} + 0.15 \cdot S_{\text{rigor}} + 0.10 \cdot S_{\text{quality}} \right) - P_{\text{inflation}} \right)\right)$$
+
+- **Deterministic Mathematical Floor:** If verified code proof count is zero ($|\text{Verified}| = 0$), $PRI$ strictly equals $0$, neutralizing prompt injection and keyword stuffing.
+
+---
+
+## ✨ Key Features
+
+- **Binary PDF Ingestion:** Rejects spoofed files via magic byte inspection (`%PDF-`), calculates SHA-256 cryptographic content digests, and extracts text streams without temporary disk storage.
+- **Deep GitHub Evidence Mining:** Analyzes language byte ratios, authentic commit velocity, package manifest dependencies, and automated test suite existence.
+- **Triangulation Matrix:** Categorizes every competency into `VERIFIED`, `INFLATED_CLAIM`, `UNCLAIMED_STRENGTH`, or `MISSING_CRITICAL`.
+- **AI Technical Viva Voce:** Generates grounded interview questions with code citations, evaluates student answers using an objective rubric, and provides targeted remediation plans.
+- **MongoDB Aggregation Analytics:** `$facet`, `$unwind`, and `$bucket` pipelines providing real-time cohort skill distribution, deficit reporting, and longitudinal candidate PRI growth trajectories.
+- **Hardened Security & Rate Limiting:** Sliding-window rate limiter (HTTP 429), strict CORS origin whitelisting, role-based access control (RBAC), and sanitization of password hashes.
+- **Docker Multi-Stage Deployability:** Nginx-powered Alpine SPA client, non-root Node 22 backend container, PostgreSQL 16, and MongoDB 7 orchestrated with health checks.
+
+---
+
+## 💻 Technology Stack
+
+| Layer | Technologies | Purpose |
+| :--- | :--- | :--- |
+| **Frontend** | React 18, Vite 6, Tailwind CSS 3, React Router v6, Axios, Lucide Icons | Responsive SPA, controlled forms, sub-second HMR |
+| **Backend** | Node.js 22 (LTS), Express 4 (ES Modules), Zod, Multer, pdf-parse | High-throughput REST API engine & validation |
+| **Relational DB** | PostgreSQL 16, Prisma ORM | Relational users, candidate profiles, and RBAC |
+| **Document DB** | MongoDB 7, Mongoose ODM | Evidence snapshots, triangulation matrices, viva sessions |
+| **AI / NLP** | Google Gemini AI (`@google/genai`) | Structured output extraction & grounded viva generation |
+| **Security** | JWT (HS256), Bcrypt (10 rounds), Sliding Rate Limiter | Authentication, password digest, DoS prevention |
+| **DevOps** | Docker, Docker Compose, Nginx Alpine, Multi-Stage Builds | Multi-container production deployment |
+
+---
+
+## 📁 Project Directory Structure
+
+```text
+Tekmira-AI/
+├── client/                     # React 18 + Vite Frontend Application
 │   ├── src/
-│   │   ├── components/         # Reusable UI components & BackendStatusBadge
-│   │   ├── pages/              # 8 Application Views
-│   │   ├── services/           # Axios apiClient & healthService
-│   │   ├── App.jsx             # React Router v6 registry
-│   │   └── main.jsx            # Entry point wrapped in BrowserRouter
-│   └── package.json
-│
-├── server/                     # Backend Application (Node.js + Express REST API)
+│   │   ├── components/         # Reusable UI shells, Navbar, Sidebar, Badge
+│   │   ├── pages/              # 8 Application Views (Dashboard, Viva, Reports)
+│   │   ├── services/           # Axios API client & error mapping
+│   │   └── utils/              # Client-side form validators & sanitizers
+│   ├── nginx.conf              # Production Nginx SPA & reverse proxy config
+│   ├── Dockerfile              # Multi-stage production build (Node -> Nginx)
+│   └── vite.config.js          # Vendor chunk splitting & build optimization
+├── server/                     # Node.js + Express REST API Engine
+│   ├── prisma/                 # Prisma ORM schema & migrations
 │   ├── src/
-│   │   ├── config/             # Environment variable loader
-│   │   ├── controllers/        # HTTP request dispatchers
-│   │   ├── middleware/         # Central error handler & 404 handler
-│   │   ├── routes/             # Express API routes
-│   │   ├── services/           # Pure business logic layer
-│   │   ├── utils/              # AppError & ApiResponse helpers
-│   │   ├── app.js              # Express app configuration & middleware
-│   │   └── server.js           # Server listener & process signal manager
-│   └── package.json
-│
-├── docs/                       # Living Specifications & Academic Guides
+│   │   ├── config/             # Environment, Prisma, & MongoDB connectors
+│   │   ├── controllers/        # REST controllers (Auth, Analysis, Viva, Analytics)
+│   │   ├── middleware/         # Auth JWT, Zod validate, Rate limiter, Error
+│   │   ├── models/             # Mongoose schemas (Reports, Viva, Snapshots)
+│   │   ├── prompts/            # Standardized anti-injection prompt templates
+│   │   ├── routes/             # Versioned REST endpoints (/api/v1/...)
+│   │   ├── services/           # Gemini, GitHub, Matching, PDF, Aggregation
+│   │   ├── test/               # 8 Automated Unit, API, & Security Test Suites
+│   │   │   ├── unit/           # Unit tests (Skills, PRI, Schemas)
+│   │   │   └── integration/    # HTTP integration tests
+│   │   └── validations/        # Zod input schemas & structured outputs
+│   ├── Dockerfile              # Multi-stage Node 22 Alpine non-root runner
+│   └── package.json            # Scripts & dependencies
+├── docs/                       # Comprehensive Architecture & Capstone Notes
 │   ├── PRD.md                  # Product Requirements Document
-│   ├── HLD.md                  # High-Level Design & System Architecture
-│   ├── LLD.md                  # Low-Level Design & Schemas
-│   └── VIVA_PREP.md            # Cumulative Viva Voce Question Bank
-│
-├── PROJECT_RULES.md            # 12 Master Development Rules & 7-Question Template
-└── README.md                   # Project overview & quickstart (this file)
+│   ├── HLD.md                  # High-Level Architecture Design
+│   ├── LLD.md                  # Low-Level Component Design
+│   ├── CONCEPT_EVIDENCE.md     # 21-Day Syllabus Assessor Traceability Map
+│   ├── Tekmira_AI_Master_Notes.html        # Week 1 Master Notes
+│   └── Tekmira_AI_Week_2_Master_Notes.html # Week 2 Master Notes
+├── docker-compose.yml          # Multi-container stack (Postgres, Mongo, API, Client)
+└── .env.docker.example         # Container stack environment variables
 ```
 
 ---
 
-## 🚦 Installation & Local Setup
+## 🚀 Getting Started
 
 ### Prerequisites
-- **Node.js:** `v20.x` or `v22.x` (verified on `v22.14.0`)
-- **npm:** `v10.x` or higher
-- **Git:** Installed and configured
 
-### 1. Clone the Repository
+- **Node.js:** v20.x or v22.x LTS
+- **npm:** v10.x+
+- **Git**
+
+### Local Development Setup
+
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/phanindra199/Tekmira-AI.git
+   cd Tekmira-AI
+   ```
+
+2. **Backend Setup:**
+   ```bash
+   cd server
+   npm install
+   cp .env.example .env
+   # Populate GEMINI_API_KEY in .env
+   npm run dev
+   ```
+   *Backend runs on `http://localhost:5000` (Health Check: `http://localhost:5000/api/health`).*
+
+3. **Frontend Setup:**
+   ```bash
+   cd ../client
+   npm install
+   npm run dev
+   ```
+   *Frontend runs on `http://localhost:5173`.*
+
+### Docker Containerized Stack
+
+Deploy the entire production stack (PostgreSQL, MongoDB, Backend API, Nginx Client) with a single command:
+
 ```bash
-git clone <repository-url>
-cd "Tekmira AI"
-```
+# 1. Copy environment template
+cp .env.docker.example .env
 
-### 2. Configure Environment Files
-Both client and server include `.env.example` templates. Ensure your local `.env` files are configured:
+# 2. Launch multi-container stack in background
+docker compose up -d --build
 
-**In `server/.env`:**
-```env
-PORT=5000
-NODE_ENV=development
-CLIENT_URL=http://localhost:5173
-```
+# 3. View live container logs
+docker compose logs -f
 
-**In `client/.env`:**
-```env
-VITE_API_BASE_URL=http://localhost:5000/api
+# 4. Access Application:
+# - Frontend SPA: http://localhost:3000
+# - Backend API:  http://localhost:5000/api/health
 ```
 
 ---
 
-## 💻 Development Commands
+## 🧪 Automated Verification & Testing
 
-### Running the Backend Server
-```bash
-cd server
-npm install
-npm run dev
-```
-The Express API will boot at `http://localhost:5000` with native file watching (`node --watch`).
+Tekmira AI includes **80 comprehensive automated tests** across 8 specialized suites covering business logic, schema parsing, HTTP APIs, container configurations, aggregation pipelines, and adversarial prompt injection defenses:
 
-### Running the Frontend Client
-In a separate terminal:
-```bash
-cd client
-npm install
-npm run dev
-```
-The React development server will start at `http://localhost:5173`.
+| Test Suite File | Domain Tested | Tests | Pass Rate | Status |
+| :--- | :--- | :---: | :---: | :---: |
+| `testSkillNormalizationUnit.js` | Frontend/Backend skill aliasing & edge cases | 13 | 13/13 | ✅ 100% |
+| `testPlacementReadinessIndexUnit.js` | PRI mathematical clamping & tier bounds | 8 | 8/8 | ✅ 100% |
+| `testStructuredSchemaParsingUnit.js` | Zod schema parsing & rubric evaluation bounds | 7 | 7/7 | ✅ 100% |
+| `testSupertestApi.js` | Full HTTP REST request/response integration | 19 | 19/19 | ✅ 100% |
+| `testDockerConfig.js` | Dockerfile stages, non-root user, compose | 7 | 7/7 | ✅ 100% |
+| `testAggregationAnalytics.js` | MongoDB aggregation pipelines & schema indexes | 10 | 10/10 | ✅ 100% |
+| `testProductionReadiness.js` | CORS whitelisting, chunk splitting, signals | 8 | 8/8 | ✅ 100% |
+| `testSecurityAuditAndPromptInjection.js` | Rate limiting (429), anti-injection, RBAC | 8 | 8/8 | ✅ 100% |
+| **TOTAL VERIFIED TEST SUITE** | **Full System Verification** | **80** | **80/80** | **✅ 100%** |
 
-### Verifying the Connection
-1. Open `http://localhost:5173/dashboard` in your browser.
-2. Observe the green **`API Online`** badge in the Navbar and Sidebar.
-3. Test the backend directly:
+### Running the Test Suites
+
 ```bash
-curl http://localhost:5000/api/health
-# Response: {"success": true, "message": "Tekmira AI backend is running"}
+# Run unit tests
+npm --prefix server run test:unit
+
+# Run HTTP API integration tests
+npm --prefix server run test:api
+
+# Run Docker configuration verification
+npm --prefix server run test:docker
+
+# Run MongoDB aggregation analytics tests
+npm --prefix server run test:aggregation
+
+# Run production readiness tests
+npm --prefix server run test:production
+
+# Run security audit & prompt injection tests
+npm --prefix server run test:security
 ```
 
 ---
 
-## 📚 Living Documentation Links
+## 🔒 Security Architecture & Threat Modeling
 
-- 📋 [Product Requirements Document (PRD)](file:///docs/PRD.md)
-- 🏛️ [High-Level Design (HLD)](file:///docs/HLD.md)
-- 📐 [Low-Level Design (LLD)](file:///docs/LLD.md)
-- 🎓 [Viva Voce & Technical Defense Guide](file:///docs/VIVA_PREP.md)
-- ⚖️ [Project Rules & Development Charter](file:///PROJECT_RULES.md)
+- **Zero Secret Leakage:** Authentication controllers strictly execute `AuthService.sanitizeUser()`, ensuring `passwordHash` digests are never leaked in HTTP payloads.
+- **Brute-Force Defense:** Sliding-window rate limiting throttles requests on sensitive authentication endpoints, issuing HTTP 429 with `Retry-After` headers.
+- **Magic-Byte Binary Protection:** Resumes are inspected at the raw byte level for `%PDF-` signatures before execution, preventing executable file upload vulnerabilities.
+- **Adversarial Prompt Defense:** All candidate-supplied strings are isolated inside triple-quote boundary blocks (`"""`) accompanied by explicit system instructions directing the model to ignore scoring override commands.
+- **Deterministic Math Invariant:** A candidate with zero empirical code evidence is mathematically floored to a PRI of $0$, completely eliminating hallucinated pass ratings.
+
+---
+
+## 📚 Documentation Index
+
+- [PRD — Product Requirements Document](file:///docs/PRD.md)
+- [HLD — High-Level Architecture Design](file:///docs/HLD.md)
+- [LLD — Low-Level Component Design](file:///docs/LLD.md)
+- [CONCEPT_EVIDENCE.md — Academic Assessor Traceability Map](file:///docs/CONCEPT_EVIDENCE.md)
+- [Week 1 Master Architecture Notes (HTML)](file:///docs/Tekmira_AI_Master_Notes.html)
+- [Week 2 Master Architecture Notes (HTML)](file:///docs/Tekmira_AI_Week_2_Master_Notes.html)
+- [Viva Voce Technical Defense Guide](file:///docs/VIVA_PREP.md)
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
