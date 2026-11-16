@@ -8,9 +8,34 @@ import { errorHandler } from './middleware/errorHandler.js';
 // 1. Initialize Express Application
 const app = express();
 
-// 2. Configure Cross-Origin Resource Sharing (CORS)
+// 2. Configure Dynamic Cross-Origin Resource Sharing (CORS) with Production Whitelisting
+const parseAllowedOrigins = (clientUrlSetting) => {
+  if (!clientUrlSetting) return ['http://localhost:5173', 'http://localhost:3000'];
+  return clientUrlSetting
+    .split(',')
+    .map(url => url.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+};
+
+const allowedOrigins = parseAllowedOrigins(config.clientUrl);
+
 app.use(cors({
-  origin: config.clientUrl,
+  origin: (origin, callback) => {
+    // Permit non-browser HTTP clients (cURL, Supertest, background workers, server-to-server)
+    if (!origin) return callback(null, true);
+    
+    // Exact whitelisted origin match or wildcard
+    if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      return callback(null, true);
+    }
+    
+    // In local non-production environments, allow localhost on any port
+    if (!config.isProduction && /^http:\/\/localhost(:\d+)?$/.test(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS policy violation: Origin '${origin}' is not authorized`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

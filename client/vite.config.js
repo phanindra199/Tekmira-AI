@@ -7,5 +7,18 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-router': ['react-router-dom'],
+          'vendor-icons': ['lucide-react'],
+          'vendor-axios': ['axios']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 600,
+    sourcemap: false // Protect internal source maps in production deployments
   }
 });

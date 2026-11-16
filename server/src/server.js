@@ -42,3 +42,14 @@ const handleShutdown = async (signal) => {
 
 process.on('SIGTERM', () => handleShutdown('SIGTERM'));
 process.on('SIGINT', () => handleShutdown('SIGINT'));
+
+// Process Safety Nets for Production Stability
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Process Safety] Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('[Process Safety] Uncaught Exception:', error);
+  // Allow pending logs to flush, then terminate cleanly for orchestrator restart
+  setTimeout(() => process.exit(1), 1000);
+});
