@@ -103,5 +103,12 @@ const SkillAnalysisReportSchema = new mongoose.Schema({
   collection: 'skill_analysis_reports'
 });
 
+// Compound & Multikey Optimization Indexes (Day 18)
+SkillAnalysisReportSchema.index({ userId: 1, createdAt: -1 });
+SkillAnalysisReportSchema.index({ overallReadinessScore: -1, createdAt: -1 });
+SkillAnalysisReportSchema.index({ status: 1, createdAt: -1 });
+SkillAnalysisReportSchema.index({ 'triangulationMatrix.skillName': 1, 'triangulationMatrix.verificationStatus': 1 });
+SkillAnalysisReportSchema.index({ 'remediationPlan.skill': 1, 'remediationPlan.gapSeverity': 1 });
+
 export const SkillAnalysisReport = mongoose.models.SkillAnalysisReport || mongoose.model('SkillAnalysisReport', SkillAnalysisReportSchema);
 export default SkillAnalysisReport;

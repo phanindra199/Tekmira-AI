@@ -77,5 +77,12 @@ const InterviewSessionSchema = new mongoose.Schema({
   collection: 'interview_sessions'
 });
 
+// Compound & Multikey Optimization Indexes (Day 18)
+InterviewSessionSchema.index({ userId: 1, createdAt: -1 });
+InterviewSessionSchema.index({ userId: 1, status: 1 });
+InterviewSessionSchema.index({ targetRole: 1, difficulty: 1 });
+InterviewSessionSchema.index({ overallScore: -1 });
+InterviewSessionSchema.index({ 'questions.skill': 1 });
+
 export const InterviewSession = mongoose.models.InterviewSession || mongoose.model('InterviewSession', InterviewSessionSchema);
 export default InterviewSession;

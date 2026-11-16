@@ -5,6 +5,7 @@ import {
   getSessionHandler,
   getUserSessionsHandler
 } from '../controllers/interviewController.js';
+import { getInterviewAnalytics } from '../controllers/analyticsController.js';
 import { optionalAuth, authenticate } from '../middleware/authMiddleware.js';
 import { validate } from '../middleware/validate.js';
 import {
@@ -23,5 +24,8 @@ router.post('/sessions/:sessionId/evaluate', optionalAuth, validate(evaluateAnsw
 // Retrieve session details & history
 router.get('/sessions/:id', optionalAuth, getSessionHandler);
 router.get('/user/:userId', optionalAuth, getUserSessionsHandler);
+
+// Aggregated Viva Voce Analytics (Day 18)
+router.get('/analytics/summary', getInterviewAnalytics);
 
 export default router;

@@ -21,6 +21,10 @@ import {
   triangulateSkillsSchema
 } from '../validations/analysisValidation.js';
 import {
+  getCohortAnalytics,
+  getCandidateTrajectory
+} from '../controllers/analyticsController.js';
+import {
   handleResumeUpload,
   validateUploadedPdf
 } from '../middleware/uploadMiddleware.js';
@@ -58,5 +62,9 @@ router.post('/triangulate', optionalAuth, validate(triangulateSkillsSchema), tri
 router.post('/reports', validate(createReportSchema), createAnalysisReport);
 router.get('/reports/user/:userId', getUserReportsHandler);
 router.get('/reports/:id', getAnalysisReport);
+
+// --- MongoDB Analytics Aggregation Endpoints (Day 18) ---
+router.get('/analytics/cohort', getCohortAnalytics);
+router.get('/analytics/trajectory/:userId?', optionalAuth, getCandidateTrajectory);
 
 export default router;
