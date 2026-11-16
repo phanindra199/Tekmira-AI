@@ -56,7 +56,7 @@ export default function AnalysisReportPage() {
         }
       } catch (err) {
         if (isMounted) {
-          setError(normalizeApiError(err));
+          setError(normalizeApiError(err).message);
         }
       } finally {
         if (isMounted) setLoading(false);
@@ -82,7 +82,7 @@ export default function AnalysisReportPage() {
       });
       setReport(response.data);
     } catch (err) {
-      setError(normalizeApiError(err));
+      setError(normalizeApiError(err).message);
     } finally {
       setLoading(false);
     }
@@ -409,6 +409,37 @@ export default function AnalysisReportPage() {
                 <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
             </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Empty State / Awaiting Triangulation */}
+      {!report && !loading && (
+        <div className="bg-white rounded-2xl p-12 border border-slate-200 shadow-sm text-center max-w-2xl mx-auto my-8">
+          <div className="w-14 h-14 rounded-2xl bg-coral-50 text-coral-600 flex items-center justify-center mx-auto mb-4">
+            <Layers className="w-7 h-7" />
+          </div>
+          <h3 className="text-base font-bold text-navy-900 mb-2">No Verification Report Generated Yet</h3>
+          <p className="text-xs text-slate-600 leading-relaxed mb-6">
+            To generate a verified Placement Readiness Index (PRI), upload a resume to extract self-reported claims, or connect a public GitHub repository for multi-file commit provenance.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Link to="/resume-analysis">
+              <Button variant="coral" size="sm">
+                <FileText className="w-3.5 h-3.5 mr-1.5" />
+                <span>Upload Resume</span>
+              </Button>
+            </Link>
+            <Link to="/github-analysis">
+              <Button variant="outline" size="sm">
+                <FolderGit2 className="w-3.5 h-3.5 mr-1.5" />
+                <span>Connect GitHub Repository</span>
+              </Button>
+            </Link>
+            <Button variant="navy" size="sm" onClick={handleReRunTriangulation}>
+              <RotateCw className="w-3.5 h-3.5 mr-1.5" />
+              <span>Generate Benchmark PRI</span>
+            </Button>
           </div>
         </div>
       )}

@@ -9,9 +9,16 @@ export default function ErrorMessage({
   title = 'Something went wrong',
   message,
   onRetry,
+  onDismiss,
   retryText = 'Try Again',
   className = ''
 }) {
+  // Extract safe string representation even if an Error or ApiError object is passed
+  const displayMessage = 
+    typeof message === 'string' 
+      ? message 
+      : message?.message || (message ? String(message) : '');
+
   return (
     <div
       role="alert"
@@ -20,10 +27,22 @@ export default function ErrorMessage({
       <div className="flex items-start gap-3">
         <AlertCircle className="w-5 h-5 text-coral-600 shrink-0 mt-0.5" />
         <div className="flex-1">
-          <h4 className="text-xs font-bold text-coral-900">{title}</h4>
-          {message && (
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-bold text-coral-900">{title}</h4>
+            {onDismiss && (
+              <button 
+                type="button" 
+                onClick={onDismiss}
+                className="text-xs text-coral-500 hover:text-coral-800 font-bold px-1"
+                aria-label="Dismiss message"
+              >
+                ×
+              </button>
+            )}
+          </div>
+          {displayMessage && (
             <p className="text-xs text-coral-700 mt-0.5 leading-relaxed">
-              {message}
+              {displayMessage}
             </p>
           )}
 

@@ -30,6 +30,10 @@ export class ApiError extends Error {
       this.originalError = originalError;
     }
   }
+
+  toString() {
+    return this.message;
+  }
 }
 
 /**

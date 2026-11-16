@@ -68,7 +68,7 @@ export default function InterviewPrepPage() {
           }
         }
       } catch (err) {
-        if (isMounted) setError(normalizeApiError(err));
+        if (isMounted) setError(normalizeApiError(err).message);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -92,7 +92,7 @@ export default function InterviewPrepPage() {
       });
       setSession(response.data);
     } catch (err) {
-      setError(normalizeApiError(err));
+      setError(normalizeApiError(err).message);
     } finally {
       setLoading(false);
     }
@@ -159,7 +159,7 @@ export default function InterviewPrepPage() {
         };
       });
     } catch (err) {
-      setError(normalizeApiError(err));
+      setError(normalizeApiError(err).message);
     } finally {
       setEvaluating(false);
       isSubmittingRef.current = false;
@@ -573,6 +573,30 @@ export default function InterviewPrepPage() {
               </Card>
             </div>
           </div>
+        )}
+
+        {/* Empty / Offline Fallback Workspace */}
+        {!session && !loading && (
+          <Card className="p-12 text-center max-w-2xl mx-auto my-8">
+            <div className="w-14 h-14 rounded-2xl bg-coral-50 text-coral-600 flex items-center justify-center mx-auto mb-4">
+              <Sparkles className="w-7 h-7" />
+            </div>
+            <h3 className="text-base font-bold text-navy-900 mb-2">Technical Viva Voce Session</h3>
+            <p className="text-xs text-slate-600 leading-relaxed mb-6">
+              Tekmira AI creates interview questions directly grounded in code citations from mined repositories. Click below to initialize a fresh session with your selected difficulty.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Button variant="coral" size="sm" onClick={() => handleStartNewSession(difficulty)}>
+                <RotateCw className="w-3.5 h-3.5 mr-1.5" />
+                <span>Initialize {difficulty} Session</span>
+              </Button>
+              <Link to="/github-analysis">
+                <Button variant="outline" size="sm">
+                  <span>Connect Repository Proofs</span>
+                </Button>
+              </Link>
+            </div>
+          </Card>
         )}
       </div>
     </MainLayout>

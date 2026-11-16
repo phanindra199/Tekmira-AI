@@ -75,7 +75,7 @@ export default function GitHubAnalysisPage() {
       const response = await repositoryService.fetchRepositoryEvidence(repoUrl.trim(), candidateEmail.trim());
       setSnapshot(response.data);
     } catch (err) {
-      setError(normalizeApiError(err));
+      setError(normalizeApiError(err).message);
     } finally {
       setLoading(false);
       isSubmittingRef.current = false;

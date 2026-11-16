@@ -168,10 +168,11 @@ export default function ResumeAnalysisPage() {
       }
     } catch (err) {
       const normalized = normalizeApiError(err);
-      if (err.response?.status === 422 || normalized.includes('OCR')) {
-        setScannedWarning(normalized);
+      const errMsg = normalized?.message || String(normalized);
+      if (err.response?.status === 422 || errMsg.includes('OCR')) {
+        setScannedWarning(errMsg);
       } else {
-        setError(normalized);
+        setError(errMsg);
       }
     } finally {
       setUploadLoading(false);
@@ -235,7 +236,7 @@ export default function ResumeAnalysisPage() {
       }
       setAnalysisResult(result);
     } catch (err) {
-      setError(normalizeApiError(err));
+      setError(normalizeApiError(err).message);
     } finally {
       setLoading(false);
     }
