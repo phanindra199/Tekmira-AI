@@ -147,7 +147,7 @@ export default function ResumeAnalysisPage() {
           success: true,
           model: aiStatus.model,
           analyzedAt: data.createdAt,
-          disclaimer: 'Extracted competencies are unverified self-reported claims. In Day 11 & 12, Tekmira AI will cross-verify each against authentic commits in your public GitHub repository.',
+          disclaimer: 'Extracted competencies are unverified self-reported claims. Tekmira AI cross-verifies each claim against authentic commits in your public GitHub repository during 3-Way Triangulation.',
           data: {
             candidateName: data.extractedClaims.candidateName || 'Extracted Candidate',
             skills: data.extractedClaims.skills.map(s => ({
@@ -267,7 +267,7 @@ export default function ResumeAnalysisPage() {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-bold text-navy-900">Tekmira Evidence Parsing Engine</h2>
-              <Badge variant="navy">Day 10 Active</Badge>
+              <Badge variant="navy">Engine Ready</Badge>
             </div>
             <p className="text-xs text-slate-500">
               Multer Memory Stream • %PDF- Magic Bytes • SHA-256 Hashing • Gemini 2.5 Flash Structured Schemas
@@ -603,10 +603,10 @@ export default function ResumeAnalysisPage() {
             </div>
 
             <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-xs">
-              <span className="text-slate-500">Scheduled Next (Day 11):</span>
-              <span className="font-semibold text-navy-900 flex items-center gap-1">
-                GitHub REST API Code Mining <ArrowRight className="w-3.5 h-3.5 text-coral-500" />
-              </span>
+              <span className="text-slate-500">Pipeline Progression:</span>
+              <Link to="/github-analysis" className="font-semibold text-navy-900 flex items-center gap-1 hover:text-coral-500 transition-colors">
+                Proceed to GitHub Code Mining <ArrowRight className="w-3.5 h-3.5 text-coral-500" />
+              </Link>
             </div>
           </div>
         </div>
@@ -767,7 +767,7 @@ export default function ResumeAnalysisPage() {
             <div>
               <strong className="block font-semibold mb-0.5">Tekmira Evidence Audit Notice:</strong>
               <span>
-                {analysisResult.disclaimer || 'These extracted competencies are strictly self-reported claims. In Day 11 & 12, Tekmira AI will cross-verify each claim against authentic commits in the candidate\'s public GitHub repositories.'}
+                {analysisResult.disclaimer || 'These extracted competencies are strictly self-reported claims. Tekmira AI cross-verifies each claim against authentic commits in the candidate\'s public GitHub repositories.'}
               </span>
             </div>
           </div>
