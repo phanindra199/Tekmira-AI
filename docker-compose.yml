@@ -1,0 +1,135 @@
+# ==============================================================================
+# Tekmira AI — Multi-Container Docker Compose Stack (Day 17)
+# 
+# Architecture:
+# - postgres: PostgreSQL 16 Alpine (Relational Candidate Profiles & RBAC)
+# - mongodb:  MongoDB 7 (Evidence Triangulation & Semantic Skill Schemas)
+# - backend:  Node 22 Express Engine (Prisma + Mongoose + Gemini AI)
+# - frontend: Nginx Alpine Reverse Proxy + Vite React SPA
+# ==============================================================================
+
+version: '3.8'
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. PostgreSQL Database Service
+  # ----------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: tekmira-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-tekmira_db}
+      POSTGRES_USER: ${POSTGRES_USER:-tekmira_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tekmira_secure_password_2026}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-tekmira_admin} -d $${POSTGRES_DB:-tekmira_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - tekmira-network
+
+  # ----------------------------------------------------------------------------
+  # 2. MongoDB NoSQL Document Database Service
+  # ----------------------------------------------------------------------------
+  mongodb:
+    image: mongo:7-jammy
+    container_name: tekmira-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-tekmira_nosql}
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongodata:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - tekmira-network
+
+  # ----------------------------------------------------------------------------
+  # 3. Tekmira AI Backend API Service
+  # ----------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: tekmira-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    environment:
+      PORT: 5000
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-tekmira_admin}:${POSTGRES_PASSWORD:-tekmira_secure_password_2026}@postgres:5432/${POSTGRES_DB:-tekmira_db}?schema=public
+      MONGODB_URI: mongodb://mongodb:27017/${MONGO_INITDB_DATABASE:-tekmira_nosql}
+      JWT_SECRET: ${JWT_SECRET:-tekmira_production_jwt_super_secret_key_2026}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:3000}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - tekmira-network
+
+  # ----------------------------------------------------------------------------
+  # 4. Tekmira AI Frontend Client Service
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: tekmira-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - tekmira-network
+
+# ------------------------------------------------------------------------------
+# Persistent Storage Volumes
+# ------------------------------------------------------------------------------
+volumes:
+  pgdata:
+    driver: local
+    name: tekmira_pgdata
+  mongodata:
+    driver: local
+    name: tekmira_mongodata
+
+# ------------------------------------------------------------------------------
+# Internal Bridge Network
+# ------------------------------------------------------------------------------
+networks:
+  tekmira-network:
+    driver: bridge
+    name: tekmira_network
