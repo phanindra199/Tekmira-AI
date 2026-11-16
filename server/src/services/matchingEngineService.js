@@ -118,7 +118,7 @@ export class MatchingEngineService {
    * @returns {{ canonical: string, category: string }}
    */
   static normalizeSkill(rawSkill) {
-    if (!rawSkill || typeof rawSkill !== 'string') {
+    if (!rawSkill || typeof rawSkill !== 'string' || !rawSkill.trim()) {
       return { canonical: 'Unknown', category: 'GENERAL' };
     }
 
@@ -199,6 +199,16 @@ export class MatchingEngineService {
         category: 'TESTING',
         detail: 'Automated test suites detected in repository (e.g. test/*.js, *.spec.js)',
         confidenceScore: 90
+      });
+    }
+
+    // From Git Repository Commits
+    if (repoSnapshot.authenticCommits?.length > 0 || repoSnapshot.repoUrl) {
+      demonstratedMap.set('Git & Version Control', {
+        source: 'COMMITS',
+        category: 'TOOLS',
+        detail: 'Authentic commit history and git version control demonstrated in repository',
+        confidenceScore: 95
       });
     }
 
@@ -370,6 +380,13 @@ export class MatchingEngineService {
         testingRigorScore: sRigor
       }
     };
+  }
+
+  /**
+   * Alias for triangulateSkills
+   */
+  static triangulate(params) {
+    return this.triangulateSkills(params);
   }
 
   /**

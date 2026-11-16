@@ -14,6 +14,7 @@ router.use('/', healthRoutes);
 
 // --- Version 1 API Routes (/api/v1/...) ---
 const v1Router = Router();
+v1Router.use('/', healthRoutes);
 v1Router.use('/auth', authRoutes);
 v1Router.use('/users', userRoutes);
 v1Router.use('/jobs', jobRoutes);
