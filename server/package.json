@@ -25,6 +25,7 @@
     "test:docker": "node src/test/testDockerConfig.js",
     "test:aggregation": "node src/test/testAggregationAnalytics.js",
     "test:production": "node src/test/testProductionReadiness.js",
+    "test:security": "node src/test/testSecurityAuditAndPromptInjection.js",
     "test:unit": "node src/test/unit/testSkillNormalizationUnit.js && node src/test/unit/testPlacementReadinessIndexUnit.js && node src/test/unit/testStructuredSchemaParsingUnit.js",
     "test:api": "node src/test/integration/testSupertestApi.js",
     "test:day16": "npm run test:unit && npm run test:api",

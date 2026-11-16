@@ -153,7 +153,7 @@ export class MatchingEngineService {
     // 1. Normalize Claimed Skills
     const claimedMap = new Map();
     claimedSkills.forEach(claim => {
-      const skillName = typeof claim === 'string' ? claim : (claim.name || claim.skillName || '');
+      const skillName = typeof claim === 'string' ? claim : (claim.name || claim.skillName || claim.skill || '');
       if (skillName) {
         const norm = this.normalizeSkill(skillName);
         claimedMap.set(norm.canonical, {
@@ -479,6 +479,13 @@ export class MatchingEngineService {
       createdAt: new Date(),
       updatedAt: new Date()
     };
+  }
+
+  /**
+   * Alias for triangulateSkills
+   */
+  static calculatePlacementReadinessIndex(params) {
+    return this.triangulateSkills(params);
   }
 }
 

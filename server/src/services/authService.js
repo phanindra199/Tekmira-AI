@@ -229,7 +229,7 @@ export class AuthService {
           githubHandle: 'test-dev',
           collegeName: 'National Institute of Tech',
           graduationYr: 2026,
-          role: 'STUDENT',
+          role: userId && userId.toLowerCase().includes('recruiter') ? 'RECRUITER' : 'STUDENT',
           createdAt: new Date(),
           updatedAt: new Date()
         };
