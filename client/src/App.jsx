@@ -13,6 +13,7 @@ import AnalysisReportPage from './pages/AnalysisReportPage';
 import SkillEvidencePage from './pages/SkillEvidencePage';
 import InterviewPrepPage from './pages/InterviewPrepPage';
 import SettingsPage from './pages/SettingsPage';
+import ApplicationsPage from './pages/ApplicationsPage';
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
       <Route path="/resume-analysis" element={<ResumeAnalysisPage />} />
       <Route path="/github-analysis" element={<GitHubAnalysisPage />} />
       <Route path="/job-match" element={<JobMatchPage />} />
+      <Route path="/applications" element={<ApplicationsPage />} />
       <Route path="/skill-evidence" element={<SkillEvidencePage />} />
       <Route path="/interview-prep" element={<InterviewPrepPage />} />
       <Route path="/analysis-report" element={<AnalysisReportPage />} />

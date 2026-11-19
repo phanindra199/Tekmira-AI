@@ -11,6 +11,7 @@ import {
   Code2,
   HelpCircle,
   Settings,
+  ClipboardList,
   X
 } from 'lucide-react';
 
@@ -40,6 +41,7 @@ export default function Sidebar({ isOpen = false, onClose }) {
       icon: Target,
       badge: 'Step 3'
     },
+    { label: 'My Applications', path: '/applications', icon: ClipboardList, badge: 'SQL JOIN' },
     {
       label: 'Skill Evidence',
       path: '/skill-evidence',

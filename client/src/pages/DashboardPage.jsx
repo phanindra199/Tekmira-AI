@@ -92,9 +92,12 @@ export default function DashboardPage() {
     let isMounted = true;
     const controller = new AbortController();
 
+    // Function declarations are hoisted within this effect scope; fetchData can
+    // be invoked below its declaration. The async body yields during network I/O.
     async function fetchData() {
-      // 1. Health check
-      try {
+      // Both independent network operations start before either one is awaited.
+      // Promise.allSettled lets the dashboard render whichever result succeeds.
+      const healthTask = (async () => { try {
         const healthResult = await checkBackendHealth({ signal: controller.signal });
         if (isMounted && !healthResult.isCancelled) {
           if (healthResult.connected && healthResult.data?.success) {
@@ -117,10 +120,9 @@ export default function DashboardPage() {
         if (isMounted) {
           setHealthStatus({ loading: false, connected: false, message: '', error: 'Service offline' });
         }
-      }
+      } })();
 
-      // 2. Real Triangulation Report Fetch
-      try {
+      const reportTask = (async () => { try {
         setLoadingReport(true);
         const cachedRepo = sessionStorage.getItem('tekmira_current_repo_snapshot');
         let repoSnapshot = null;
@@ -146,7 +148,8 @@ export default function DashboardPage() {
         }
       } finally {
         if (isMounted) setLoadingReport(false);
-      }
+      } })();
+      await Promise.allSettled([healthTask, reportTask]);
     }
 
     fetchData();

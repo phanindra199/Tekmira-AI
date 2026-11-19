@@ -27,6 +27,8 @@ export default function JobMatchPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [savedStatus, setSavedStatus] = useState({});
+  const [applyingJobId, setApplyingJobId] = useState(null);
+  const [appliedStatus, setAppliedStatus] = useState({});
   const isNavigatingRef = React.useRef(false);
 
   useEffect(() => {
@@ -64,6 +66,17 @@ export default function JobMatchPage() {
     } catch (err) {
       alert(err.message || 'Could not bookmark job');
     }
+  };
+
+  const handleApply = async (event, jobId) => {
+    event.stopPropagation();
+    setApplyingJobId(jobId);
+    try {
+      await jobService.applyToJob(jobId);
+      setAppliedStatus((previous) => ({ ...previous, [jobId]: true }));
+    } catch (err) {
+      alert(err.message || 'Please sign in before applying.');
+    } finally { setApplyingJobId(null); }
   };
 
   const selectedJob = jobs.find(j => j.id === selectedJobId) || jobs[0];
@@ -187,6 +200,9 @@ export default function JobMatchPage() {
                         </span>
                       )}
                     </div>
+                    <Button size="sm" disabled={applyingJobId === job.id || appliedStatus[job.id]} onClick={(event) => handleApply(event, job.id)} className="w-full">
+                      {appliedStatus[job.id] ? 'Applied' : applyingJobId === job.id ? 'Submitting…' : 'Apply to role'}
+                    </Button>
 
                     <div className="flex flex-wrap gap-1.5 mb-4">
                       {(job.requiredSkills || []).slice(0, 4).map((skill, i) => (

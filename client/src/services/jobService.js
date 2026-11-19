@@ -25,6 +25,12 @@ export const jobService = {
   async saveJob(jobId) {
     const response = await apiClient.post(`/jobs/save/${jobId}`);
     return response.data;
+  },
+  async applyToJob(jobId) {
+    return apiClient.post(`/jobs/apply/${jobId}`);
+  },
+  async getMyApplications({ signal } = {}) {
+    return apiClient.get('/jobs/applications/me', { signal });
   }
 };
 

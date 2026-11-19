@@ -7,6 +7,18 @@ import { getPrismaClient } from '../config/database.js';
  * SQL JOIN demonstrations for academic viva voce and technical defense.
  */
 export class JobApplicationService {
+  /** Apply atomically and remove a matching bookmark when one exists. */
+  static async applyToJob(userId, jobId) {
+    const prisma = getPrismaClient();
+    return prisma.$transaction(async (tx) => {
+      const existing = await tx.jobApplication.findFirst({ where: { userId, jobId } });
+      if (existing) return existing;
+      const application = await tx.jobApplication.create({ data: { userId, jobId, status: 'APPLIED', appliedAt: new Date() } });
+      await tx.savedJob.deleteMany({ where: { userId, jobId } });
+      return application;
+    });
+  }
+
   /**
    * Fetches all job applications for a user with their associated job descriptions
    * Demonstrates 1-to-many relationship and foreign key traversal.
