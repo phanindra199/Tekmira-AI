@@ -1,4 +1,7 @@
 import { getPrismaClient } from '../config/database.js';
+import { AppError } from '../utils/AppError.js';
+
+const APPLICATION_STATUSES = new Set(['SAVED', 'APPLIED', 'INTERVIEWING', 'OFFER', 'REJECTED']);
 
 /**
  * Job Application & Relational Queries Service
@@ -52,6 +55,28 @@ export class JobApplicationService {
       },
       orderBy: { createdAt: 'desc' }
     });
+  }
+
+  /** Update one of the signed-in candidate's application statuses (CRUD: Update). */
+  static async updateUserApplication(userId, applicationId, status) {
+    if (!APPLICATION_STATUSES.has(status)) throw new AppError('Invalid application status', 400);
+    const prisma = getPrismaClient();
+    const result = await prisma.jobApplication.updateMany({
+      where: { id: applicationId, userId },
+      data: { status, ...(status === 'APPLIED' ? { appliedAt: new Date() } : {}) }
+    });
+    if (result.count === 0) throw new AppError('Application not found', 404);
+    return prisma.jobApplication.findFirst({
+      where: { id: applicationId, userId },
+      include: { job: { select: { id: true, title: true, company: true, location: true, jobType: true, requiredSkills: true } } }
+    });
+  }
+
+  /** Delete one of the signed-in candidate's applications (CRUD: Delete). */
+  static async deleteUserApplication(userId, applicationId) {
+    const prisma = getPrismaClient();
+    const result = await prisma.jobApplication.deleteMany({ where: { id: applicationId, userId } });
+    if (result.count === 0) throw new AppError('Application not found', 404);
   }
 
   /**

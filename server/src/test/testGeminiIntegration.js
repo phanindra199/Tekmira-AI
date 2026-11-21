@@ -35,26 +35,24 @@ async function runTests() {
   // --- 2. Input Validation (Zod Schema & Service Boundary) ---
   console.log('\n--- 2. Input Validation Boundary ---');
   try {
-    analyzeResumeSchema.parse({ body: { resumeText: 'Too short' } });
+    analyzeResumeSchema.parse({ resumeText: 'Too short' });
     assert(false, 'Zod should reject resumeText shorter than 20 characters');
   } catch (err) {
     assert(err.issues && err.issues.length > 0, 'Zod catches short resumeText (<20 chars)');
   }
 
   try {
-    analyzeResumeSchema.parse({ body: {} });
+    analyzeResumeSchema.parse({});
     assert(false, 'Zod should reject missing resumeText');
   } catch (err) {
     assert(err.issues && err.issues.length > 0, 'Zod catches missing resumeText');
   }
 
   const validPayload = {
-    body: {
-      resumeText: 'Experienced full stack developer with 3 years building React, Node.js, Express, and PostgreSQL applications.'
-    }
+    resumeText: 'Experienced full stack developer with 3 years building React, Node.js, Express, and PostgreSQL applications.'
   };
   const parsed = analyzeResumeSchema.parse(validPayload);
-  assert(parsed.body.resumeText.length > 20, 'Valid resume text passes Zod schema');
+  assert(parsed.resumeText.length > 20, 'Valid resume text passes Zod schema');
 
   // --- 3. Missing API Key Defensive Handling ---
   console.log('\n--- 3. Missing API Key Defensive Handling ---');

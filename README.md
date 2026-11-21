@@ -144,6 +144,8 @@ Tekmira-AI/
 - **Node.js:** v20.x or v22.x LTS
 - **npm:** v10.x+
 - **Git**
+- **PostgreSQL:** running locally for account, job, and application data
+- **MongoDB:** optional for local development; document-backed features use the configured MongoDB connection when available
 
 ### Local Development Setup
 
@@ -153,31 +155,43 @@ Tekmira-AI/
    cd Tekmira-AI
    ```
 
-2. **Backend Setup:**
+2. **Install dependencies from the project root:**
    ```bash
-   cd server
-   npm install
-   cp .env.example .env
-   # Populate GEMINI_API_KEY in .env
-   npm run dev
+   npm run setup:dependencies
    ```
-   *Backend runs on `http://localhost:5000` (Health Check: `http://localhost:5000/api/health`).*
 
-3. **Frontend Setup:**
+3. **Configure local environment files:**
+   ```powershell
+   if (-not (Test-Path server/.env)) { Copy-Item server/.env.example server/.env }
+   if (-not (Test-Path client/.env)) { Copy-Item client/.env.example client/.env }
+   ```
+   Update `DATABASE_URL` and `JWT_SECRET` in `server/.env` for your local setup. Add `GEMINI_API_KEY` there to enable live Gemini features. Never put server secrets in `client/.env` or commit either `.env` file.
+
+4. **Start PostgreSQL**, then from the project root run:
    ```bash
-   cd ../client
-   npm install
+   npm run db:setup
+   ```
+   This generates Prisma Client, applies the checked-in database migration, and inserts or updates the benchmark job roles. It does not create a demo login.
+
+5. **Run the app from the project root:**
+   ```bash
    npm run dev
    ```
-   *Frontend runs on `http://localhost:5173`.*
+   Vite prints the frontend URL (normally `http://localhost:5173`); the Express API health check is `http://localhost:5000/api/health`.
+
+### What is Docker?
+
+Docker runs each part of the application in an isolated container. A `Dockerfile` is the build recipe for one container; `docker-compose.yml` starts the client, API, PostgreSQL, and MongoDB together. Docker is optional if you install and run PostgreSQL locally. Use the Docker setup below only after installing Docker Desktop and starting it.
 
 ### Docker Containerized Stack
 
 Deploy the entire production stack (PostgreSQL, MongoDB, Backend API, Nginx Client) with a single command:
 
 ```bash
-# 1. Copy environment template
+# 1. Copy environment template and replace the placeholder passwords/secrets
 cp .env.docker.example .env
+# Generate strong hex values with Node.js:
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 # 2. Launch multi-container stack in background
 docker compose up -d --build

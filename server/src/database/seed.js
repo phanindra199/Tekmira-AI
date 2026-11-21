@@ -2,7 +2,7 @@ import { getPrismaClient, disconnectDatabase } from '../config/database.js';
 
 /**
  * Tekmira AI — Safe Development Database Seed Script
- * Populates benchmark campus job roles and an initial demo student candidate
+ * Idempotently populates benchmark campus job roles. Students create their own accounts in the app.
  */
 export async function seedDatabase() {
   console.log('🌱 Starting Tekmira AI database seed...');
@@ -57,67 +57,22 @@ Requirements:
     console.log(`📋 Seeding ${jobs.length} benchmark job descriptions...`);
     const createdJobs = [];
     for (const job of jobs) {
-      // Upsert by title + company if needed or create
-      const created = await prisma.jobDescription.create({
-        data: job
+      // The schema has no composite unique key for title/company, so look up the
+      // natural key and update an existing benchmark instead of duplicating it.
+      const existing = await prisma.jobDescription.findFirst({
+        where: { title: job.title, company: job.company },
+        select: { id: true }
       });
+      const created = existing
+        ? await prisma.jobDescription.update({ where: { id: existing.id }, data: job })
+        : await prisma.jobDescription.create({ data: job });
       createdJobs.push(created);
       console.log(`  ✓ Seeded Job: ${job.title} (${job.company})`);
     }
-
-    // 2. Seed Demo Candidate User
-    console.log('\n👤 Seeding demo candidate profile...');
-    const demoUser = await prisma.user.upsert({
-      where: { email: 'alex.morgan@tekmira.ai' },
-      update: {},
-      create: {
-        email: 'alex.morgan@tekmira.ai',
-        passwordHash: '$2b$10$demoHashedPasswordPlaceholderForDay6Bcrypt',
-        fullName: 'Alex Morgan',
-        githubHandle: 'alexmorgan-dev',
-        collegeName: 'National Institute of Engineering',
-        graduationYr: 2026,
-        role: 'STUDENT'
-      }
-    });
-    console.log(`  ✓ Seeded User: ${demoUser.fullName} (${demoUser.email})`);
-
-    // 3. Seed Sample Saved Job and Job Application with Relational Links
-    if (createdJobs.length > 0) {
-      console.log('\n🔗 Seeding relational job application and bookmark...');
-      const targetJob = createdJobs[0];
-
-      await prisma.savedJob.upsert({
-        where: {
-          userId_jobId: {
-            userId: demoUser.id,
-            jobId: targetJob.id
-          }
-        },
-        update: {},
-        create: {
-          userId: demoUser.id,
-          jobId: targetJob.id
-        }
-      });
-      console.log(`  ✓ Created SavedJob relationship: ${demoUser.fullName} -> ${targetJob.title}`);
-
-      await prisma.jobApplication.create({
-        data: {
-          userId: demoUser.id,
-          jobId: targetJob.id,
-          status: 'APPLIED',
-          matchScore: 84.5,
-          notes: 'Triangulation verified: 7/8 skills backed by authentic GitHub repository commits.',
-          appliedAt: new Date()
-        }
-      });
-      console.log(`  ✓ Created JobApplication relationship with matchScore: 84.5%`);
-    }
-
-    console.log('\n✅ Database seed completed successfully!');
+    console.log(`\n✅ Database seed completed: ${createdJobs.length} benchmark roles ready.`);
   } catch (error) {
     console.error('❌ Error executing database seed:', error.message);
+    process.exitCode = 1;
   } finally {
     await disconnectDatabase();
   }

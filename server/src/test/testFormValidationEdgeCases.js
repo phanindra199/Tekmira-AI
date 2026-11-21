@@ -213,7 +213,7 @@ console.log('\n--- 4. Resume Text Stream Boundary Edge Cases ---');
 
 runTest('Rejects resume text under 20 characters', () => {
   const result = analyzeResumeSchema.safeParse({
-    body: { resumeText: 'Too short' }
+    resumeText: 'Too short'
   });
   assert.strictEqual(result.success, false);
 });
@@ -221,7 +221,7 @@ runTest('Rejects resume text under 20 characters', () => {
 runTest('Rejects resume text exceeding 50,000 characters', () => {
   const longResume = 'A'.repeat(50001);
   const result = analyzeResumeSchema.safeParse({
-    body: { resumeText: longResume }
+    resumeText: longResume
   });
   assert.strictEqual(result.success, false);
 });
@@ -229,7 +229,7 @@ runTest('Rejects resume text exceeding 50,000 characters', () => {
 runTest('Accepts calibrated technical resume text within bounds', () => {
   const validResume = 'Senior Full Stack Developer experienced with React, Node.js, PostgreSQL, and Docker.';
   const result = analyzeResumeSchema.safeParse({
-    body: { resumeText: validResume }
+    resumeText: validResume
   });
   assert.strictEqual(result.success, true);
 });

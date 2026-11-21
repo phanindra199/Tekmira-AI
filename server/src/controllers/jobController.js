@@ -54,4 +54,18 @@ export const getMyApplications = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+export const updateMyApplication = async (req, res, next) => {
+  try {
+    const application = await JobApplicationService.updateUserApplication(req.user.id, req.params.applicationId, req.body.status);
+    return res.status(200).json({ success: true, data: application });
+  } catch (error) { next(error); }
+};
+
+export const deleteMyApplication = async (req, res, next) => {
+  try {
+    await JobApplicationService.deleteUserApplication(req.user.id, req.params.applicationId);
+    return res.status(200).json({ success: true, message: 'Application withdrawn' });
+  } catch (error) { next(error); }
+};
+
 export default { getJobs, getJobById, saveJob };

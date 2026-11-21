@@ -35,6 +35,7 @@ import { normalizeApiError } from '../utils/apiError';
 import { validateVivaAnswer } from '../utils/clientValidation';
 
 export default function InterviewPrepPage() {
+  const [openJavaScriptTopic, setOpenJavaScriptTopic] = useState(null);
   const [difficulty, setDifficulty] = useState('INTERMEDIATE');
   const [session, setSession] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -202,6 +203,30 @@ export default function InterviewPrepPage() {
       }
     >
       <div className="space-y-6 mb-8">
+        <Card className="p-6">
+          <div className="flex items-start gap-3 mb-4">
+            <BookOpen className="w-5 h-5 text-coral-500 mt-0.5" />
+            <div>
+              <h3 className="text-sm font-bold text-navy-900">JavaScript interview warm-up</h3>
+              <p className="text-xs text-slate-500 mt-1">Review common questions before your personalized viva. Use the answer points to practice explaining the idea aloud.</p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {[
+              { id: 'event-loop', question: 'How does the JavaScript event loop schedule asynchronous work?', answer: 'JavaScript runs synchronous code on the call stack. Promise callbacks enter the microtask queue; timer and I/O callbacks are tasks. After the current stack empties, microtasks run before the next task. This lets the browser continue responding while network work is pending.', code: "console.log('sync'); Promise.resolve().then(() => console.log('microtask')); setTimeout(() => console.log('task'), 0);" },
+              { id: 'promises-callbacks', question: 'How do Promises differ from callbacks?', answer: 'A callback is a function passed to another function to run later. Promises represent a future result and support chaining with then/catch or async/await. Both are useful; Promises make sequential async flows and error propagation easier to compose.', code: 'loadWithCallback((error, value) => { /* handle result */ });\nloadWithPromise().then(handleResult).catch(handleError);' },
+              { id: 'hoisting', question: 'What is hoisting, and how does it differ for var, let, const, and functions?', answer: 'Function declarations are available throughout their scope before their source line executes. var declarations are hoisted and initialized to undefined. let and const are hoisted too, but remain unavailable in the temporal dead zone until initialization.', code: 'const message = getMessage(); // works\nfunction getMessage() { return "ready"; }' }
+            ].map((topic) => (
+              <article key={topic.id} className="rounded-xl border border-slate-200 overflow-hidden">
+                <button type="button" aria-expanded={openJavaScriptTopic === topic.id} onClick={() => setOpenJavaScriptTopic(openJavaScriptTopic === topic.id ? null : topic.id)} className="w-full flex items-center justify-between gap-3 p-3 text-left text-sm font-semibold text-navy-900 hover:bg-slate-50">
+                  <span>{topic.question}</span><ChevronRight className={`w-4 h-4 shrink-0 transition-transform ${openJavaScriptTopic === topic.id ? 'rotate-90' : ''}`} />
+                </button>
+                {openJavaScriptTopic === topic.id && <div className="px-4 pb-4"><p className="text-sm leading-6 text-slate-600">{topic.answer}</p><pre className="mt-3 overflow-x-auto rounded-lg bg-slate-950 p-3 text-xs leading-5 text-emerald-200"><code>{topic.code}</code></pre></div>}
+              </article>
+            ))}
+          </div>
+        </Card>
+
         {/* Top Session Configuration & Difficulty Card */}
         <Card className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

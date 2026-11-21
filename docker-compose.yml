@@ -21,7 +21,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-tekmira_db}
       POSTGRES_USER: ${POSTGRES_USER:-tekmira_admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tekmira_secure_password_2026}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your root .env}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
@@ -76,9 +76,9 @@ services:
     environment:
       PORT: 5000
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER:-tekmira_admin}:${POSTGRES_PASSWORD:-tekmira_secure_password_2026}@postgres:5432/${POSTGRES_DB:-tekmira_db}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-tekmira_admin}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your root .env}@postgres:5432/${POSTGRES_DB:-tekmira_db}?schema=public
       MONGODB_URI: mongodb://mongodb:27017/${MONGO_INITDB_DATABASE:-tekmira_nosql}
-      JWT_SECRET: ${JWT_SECRET:-tekmira_production_jwt_super_secret_key_2026}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in your root .env}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       CLIENT_URL: ${CLIENT_URL:-http://localhost:3000}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}

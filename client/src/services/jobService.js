@@ -31,6 +31,12 @@ export const jobService = {
   },
   async getMyApplications({ signal } = {}) {
     return apiClient.get('/jobs/applications/me', { signal });
+  },
+  async updateApplication(applicationId, status) {
+    return apiClient.patch(`/jobs/applications/${applicationId}`, { status });
+  },
+  async deleteApplication(applicationId) {
+    return apiClient.delete(`/jobs/applications/${applicationId}`);
   }
 };
 
